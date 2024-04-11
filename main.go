@@ -3,7 +3,8 @@ package main
 import (
 	"os"
 
-	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v2"
+	"github.com/voidmaindev/doctra_lis_middleware/controllers"
 	"github.com/voidmaindev/doctra_lis_middleware/inits"
 	"github.com/voidmaindev/doctra_lis_middleware/store"
 )
@@ -20,9 +21,11 @@ func init() {
 func main() {
 	app := fiber.New()
 
-	app.Get("/", func(c fiber.Ctx) error {
-			return c.SendString("Hello, World!")
-	})
+	app.Get("/hardwares", controllers.HardwaresGetAll)
+	app.Get("/hardwares/:id", controllers.HardwaresGetByID)
+	app.Post("/hardwares", controllers.HardwaresCreate)
+	app.Put("/hardwares/:id", controllers.HardwaresUpdate)
+	app.Delete("/hardwares/:id", controllers.HardwaresDelete)
 
 	app.Listen(addr)
 }

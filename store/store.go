@@ -16,7 +16,6 @@ func ConnectToDB() {
 	dsn := os.Getenv("DSN")
 	DB, err = gorm.Open(sqlserver.Open(dsn), &gorm.Config{})
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(err.Error())
 	}
-
 }
