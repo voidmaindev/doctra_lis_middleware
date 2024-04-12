@@ -1,2 +1,2 @@
 # Doctra LIS Middleware
-This is the begining repository of LIS middleware for Doctra
+This is the initial repository of LIS middleware for Doctra
