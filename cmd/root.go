@@ -1,8 +1,10 @@
-package command
+package cmd
 
 import (
-	"fmt"
+	"context"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/spf13/cobra"
 )
@@ -21,8 +23,13 @@ func init() {
 
 // Execute executes the CLI tool.
 func Execute() {
-	if err := rootCmd.Execute(); err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
-	}
+	cobra.CheckErr(rootCmd.ExecuteContext(context.Background()))
+}
+
+// waitForShutdown waits for the shutdown signal.
+func waitForShutdown() {
+	interruptChan := make(chan os.Signal, 1)
+	signal.Notify(interruptChan, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
+
+	<-interruptChan
 }
