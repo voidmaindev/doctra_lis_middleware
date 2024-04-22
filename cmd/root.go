@@ -19,6 +19,7 @@ var rootCmd = &cobra.Command{
 // Init initializes the CLI tool.
 func init() {
 	rootCmd.AddCommand(ApiServerCommand)
+	rootCmd.AddCommand(DeviceServerCommand)
 }
 
 // Execute executes the CLI tool.
