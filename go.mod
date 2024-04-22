@@ -35,6 +35,7 @@ require (
 	github.com/mattn/go-runewidth v0.0.15 // indirect
 	github.com/microsoft/go-mssqldb v1.7.0 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
+	github.com/rs/zerolog v1.32.0 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/savsgio/gotils v0.0.0-20230208104028-c358bd845dee // indirect
 	github.com/shurcooL/sanitized_anchor_name v1.0.0 // indirect
