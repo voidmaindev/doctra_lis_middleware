@@ -1,3 +1,4 @@
+// Package main provides the entry point of the application.
 package main
 
 import "github.com/voidmaindev/doctra_lis_middleware/cmd"

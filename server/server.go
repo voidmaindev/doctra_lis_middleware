@@ -1,3 +1,4 @@
+// Package server provides the server struct that represents the server.
 package server
 
 import (

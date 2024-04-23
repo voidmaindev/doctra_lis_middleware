@@ -1,3 +1,4 @@
+// Package log provides a wrapper around the zerolog package to log messages at different levels.
 package log
 
 import (

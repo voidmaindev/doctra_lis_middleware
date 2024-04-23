@@ -1,3 +1,4 @@
+// Package config provides functions for reading and writing JSON config files.
 package config
 
 import (
