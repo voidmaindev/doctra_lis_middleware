@@ -7,20 +7,19 @@ import (
 )
 
 // server is the struct that represents the server.
-type server struct {
-	App    app.App
-	Log    *log.Logger
-	Config int
+type Server struct {
+	App app.App
+	Log *log.Logger
 }
 
 // NewServer creates a new server.
-func newServer(a app.App) (*server, error) {
+func newServer(a app.App) (*Server, error) {
 	logger, err := log.NewLogger()
 	if err != nil {
 		return nil, err
 	}
 
-	srv := &server{
+	srv := &Server{
 		App: a,
 		Log: logger,
 	}
@@ -29,7 +28,11 @@ func newServer(a app.App) (*server, error) {
 }
 
 // Start starts the server.
-func (s *server) Start() error {
+func (s *Server) Start() error {
+	s.Log.Trace("Starting server...")
+
+	s.App.SetLogger(s.Log)
+
 	err := s.App.InitApp()
 	if err != nil {
 		return err
@@ -39,7 +42,7 @@ func (s *server) Start() error {
 }
 
 // Stop stops the server.
-func (s *server) Stop() {
+func (s *Server) Stop() {
 	// ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
 	// defer cancel()
 	// s.Shutdown(ctx)

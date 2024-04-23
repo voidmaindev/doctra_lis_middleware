@@ -1,7 +1,7 @@
 package config
 
 // logConfigFile is the path to the log configuration file
-const logConfigFile = "config/logConfig.json"
+const logConfigFile = "config/log_config.json"
 
 // LogSettings is the struct that holds the log settings
 type LogSettings struct {
