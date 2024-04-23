@@ -2,22 +2,29 @@ package server
 
 import (
 	"github.com/voidmaindev/doctra_lis_middleware/app"
+	"github.com/voidmaindev/doctra_lis_middleware/log"
 )
 
 // server is the struct that represents the server.
 type server struct {
 	App    app.App
-	Log    int
+	Log    *log.Logger
 	Config int
 }
 
-// NewApiServer creates a new server for the API server.
-func newServer(a app.App) *server {
-	//implement logger
+// NewServer creates a new server.
+func newServer(a app.App) (*server, error) {
+	logger, err := log.NewLogger()
+	if err != nil {
+		return nil, err
+	}
 
-	//implement config
+	srv := &server{
+		App: a,
+		Log: logger,
+	}
 
-	return &server{App: a}
+	return srv, nil
 }
 
 // Start starts the server.

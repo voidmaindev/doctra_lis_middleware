@@ -1,0 +1,7 @@
+{
+	"Disable" : false,
+	"Output" : "Stdout",
+	"TimeFormat" : "RFC3339",
+	"AddCaller" : true,
+	"AddPid" : false
+}
