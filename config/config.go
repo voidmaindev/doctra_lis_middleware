@@ -7,10 +7,7 @@ import (
 	"os"
 )
 
-const (
-	
-)
-
+// ReadConfig reads a JSON config file and unmarshals it into the provided struct.
 func ReadConfig(fileName string, config interface{}) error {
 	configFile, err := os.Open(fileName)
 	if err != nil {
