@@ -7,4 +7,5 @@ import "github.com/voidmaindev/doctra_lis_middleware/log"
 type App interface {
 	SetLogger(*log.Logger)
 	InitApp() error
+	setConfig() error
 }

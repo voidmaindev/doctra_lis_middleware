@@ -13,8 +13,8 @@ import (
 
 // Logger is a wrapper around zerolog.Logger
 type Logger struct {
-	logger   *zerolog.Logger
-	disabled bool
+	Logger   *zerolog.Logger
+	Disabled bool
 }
 
 // NewLogger creates a new Logger instance
@@ -25,7 +25,7 @@ func NewLogger() (*Logger, error) {
 	}
 
 	if settings.Disable {
-		return &Logger{disabled: true}, nil
+		return &Logger{Disabled: true}, nil
 	}
 
 	cw := zerolog.ConsoleWriter{
@@ -45,69 +45,77 @@ func NewLogger() (*Logger, error) {
 
 	logger := loggerContext.Logger()
 
-	return &Logger{logger: &logger}, nil
+	return &Logger{Logger: &logger}, nil
 }
 
 // Trace logs a message at trace level
 func (l *Logger) Trace(msg string) {
-	if l.disabled {
+	if l.Disabled {
 		return
 	}
 
-	(*l.logger).Trace().Msg(msg)
+	(*l.Logger).Trace().Msg(msg)
 }
 
 // Debug logs a message at debug level
 func (l *Logger) Debug(msg string) {
-	if l.disabled {
+	if l.Disabled {
 		return
 	}
 
-	(*l.logger).Debug().Msg(msg)
+	(*l.Logger).Debug().Msg(msg)
 }
 
 // Info logs a message at info level
 func (l *Logger) Info(msg string) {
-	if l.disabled {
+	if l.Disabled {
 		return
 	}
 
-	(*l.logger).Info().Msg(msg)
+	(*l.Logger).Info().Msg(msg)
 }
 
 func (l *Logger) Warn(msg string) {
-	if l.disabled {
+	if l.Disabled {
 		return
 	}
 
-	(*l.logger).Warn().Msg(msg)
+	(*l.Logger).Warn().Msg(msg)
 }
 
 // Error logs a message at error level
 func (l *Logger) Error(msg string) {
-	if l.disabled {
+	if l.Disabled {
 		return
 	}
 
-	(*l.logger).Error().Msg(msg)
+	(*l.Logger).Error().Msg(msg)
 }
 
-// Fatal logs a message at fatal level
-func (l *Logger) Fatal(msg string) {
-	if l.disabled {
+func (l *Logger) Err(err error, msg string) {
+	if l.Disabled {
 		return
 	}
 
-	(*l.logger).Fatal().Msg(msg)
+	(*l.Logger).Err(err).Msg(msg)
 }
 
 // Panic logs a message at panic level
 func (l *Logger) Panic(msg string) {
-	if l.disabled {
+	if l.Disabled {
 		return
 	}
 
-	(*l.logger).Panic().Msg(msg)
+	(*l.Logger).Panic().Msg(msg)
+}
+
+// Fatal logs a message at fatal level
+func (l *Logger) Fatal(msg string) {
+	if l.Disabled {
+		return
+	}
+
+	(*l.Logger).Fatal().Msg(msg)
 }
 
 // getOutput returns the output writer based on the output string

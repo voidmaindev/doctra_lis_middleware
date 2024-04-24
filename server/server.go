@@ -29,12 +29,13 @@ func newServer(a app.App) (*Server, error) {
 
 // Start starts the server.
 func (s *Server) Start() error {
-	s.Log.Trace("Starting server...")
+	s.Log.Info("Starting server...")
 
 	s.App.SetLogger(s.Log)
 
 	err := s.App.InitApp()
 	if err != nil {
+		s.Log.Error("Failed to initialize the application")
 		return err
 	}
 

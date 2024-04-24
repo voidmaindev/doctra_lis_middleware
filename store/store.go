@@ -1,21 +1,21 @@
 package store
 
-import (
-	"log"
-	"os"
+// var DB *gorm.DB
 
-	"gorm.io/driver/sqlserver"
-	"gorm.io/gorm"
-)
+// func ConnectToDB() {
+// 	var err error
 
-var DB *gorm.DB
+// 	dsn := os.Getenv("DSN")
+// 	DB, err = gorm.Open(sqlserver.Open(dsn), &gorm.Config{})
+// 	if err != nil {
+// 		log.Fatal(err.Error())
+// 	}
+// }
 
-func ConnectToDB() {
-	var err error
+type Store interface {
+	User()
+}
 
-	dsn := os.Getenv("DSN")
-	DB, err = gorm.Open(sqlserver.Open(dsn), &gorm.Config{})
-	if err != nil {
-		log.Fatal(err.Error())
-	}
+func NewStore() *Store {
+	return &Store{}
 }

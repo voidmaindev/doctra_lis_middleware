@@ -18,8 +18,19 @@ func (a *DeviceServerApplication) SetLogger(l *log.Logger) {
 
 // InitApp initializes the device server application.
 func (a *DeviceServerApplication) InitApp() error {
+	err := a.setConfig()
+	if err != nil {
+		a.Log.Error("Failed to set the device server config")
+		return err
+	}
+
+	return nil
+}
+
+func (a *DeviceServerApplication) setConfig() error {
 	config, err := config.ReadDeviceServerConfig()
 	if err != nil {
+		a.Log.Err(err, "Failed to read the device server config")
 		return err
 	}
 	a.Config = config
