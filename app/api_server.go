@@ -23,8 +23,6 @@ func (a *ApiServerApplication) SetLogger(l *log.Logger) {
 
 // InitApp initializes the API server application.
 func (a *ApiServerApplication) InitApp() error {
-	// var err error
-
 	err := a.setConfig()
 	if err != nil {
 		a.Log.Error("failed to set the API server config")
