@@ -35,6 +35,7 @@ func (a *DeviceServerApplication) InitApp() error {
 	return nil
 }
 
+// setConfig sets the configuration for the device server application.
 func (a *DeviceServerApplication) setConfig() error {
 	config, err := config.ReadDeviceServerConfig()
 	if err != nil {
@@ -46,6 +47,7 @@ func (a *DeviceServerApplication) setConfig() error {
 	return nil
 }
 
+// setStore sets the store for the device server application.
 func (a *DeviceServerApplication) setStore() error {
 	store, err := store.NewStore(a.Log)
 	if err != nil {
