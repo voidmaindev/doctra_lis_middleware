@@ -6,6 +6,7 @@ import (
 	"gorm.io/gorm"
 )
 
+// LabData represents a lab data.
 type LabData struct {
 	gorm.Model
 	DeviceID      uint      `json:"device_id" gorm:"not null;index"`

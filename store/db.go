@@ -7,6 +7,7 @@ import (
 	"gorm.io/gorm"
 )
 
+// DB is an interface that defines the methods that a database should implement.
 type DB interface {
 	getDSN(settings *config.DBSettings, woDBName bool) string
 	newDB(settings *config.DBSettings, dsn string) (*gorm.DB, error)

@@ -8,10 +8,12 @@ import (
 	"gorm.io/gorm"
 )
 
+// LabDataStore is the store for the LabData model.
 type LabDataStore struct {
 	db *gorm.DB
 }
 
+// NewLabDataStore creates a new LabDataStore.
 func NewLabDataStore(db *gorm.DB) (*LabDataStore, error) {
 	store := &LabDataStore{db: db}
 	err := store.db.AutoMigrate(&model.LabData{})
@@ -22,6 +24,7 @@ func NewLabDataStore(db *gorm.DB) (*LabDataStore, error) {
 	return store, nil
 }
 
+// Create creates a new lab data.
 func (s *LabDataStore) Create(labData *model.LabData) error {
 	err := s.db.Create(labData).Error
 	if err != nil {
@@ -31,6 +34,7 @@ func (s *LabDataStore) Create(labData *model.LabData) error {
 	return nil
 }
 
+// GetByID gets a lab data by ID.
 func (s *LabDataStore) GetByID(id uint) (*model.LabData, error) {
 	labData := &model.LabData{}
 	err := s.db.First(labData, id).Error
@@ -41,6 +45,7 @@ func (s *LabDataStore) GetByID(id uint) (*model.LabData, error) {
 	return labData, nil
 }
 
+// GetByBarcode gets a lab data by barcode.
 func (s *LabDataStore) GetByBarcode(barcode string) ([]*model.LabData, error) {
 	labData := []*model.LabData{}
 	err := s.db.Where("barcode = ?", barcode).Find(&labData).Error
@@ -51,6 +56,7 @@ func (s *LabDataStore) GetByBarcode(barcode string) ([]*model.LabData, error) {
 	return labData, nil
 }
 
+// GetByDeviceID gets lab data by device ID.
 func (s *LabDataStore) GetByDeviceID(deviceID uint) ([]*model.LabData, error) {
 	labData := []*model.LabData{}
 	err := s.db.Where("device_id = ?", deviceID).Find(&labData).Error
@@ -61,6 +67,7 @@ func (s *LabDataStore) GetByDeviceID(deviceID uint) ([]*model.LabData, error) {
 	return labData, nil
 }
 
+// GetByDeviceIDAndBarcode gets a lab data by device ID and barcode.
 func (s *LabDataStore) GetByDeviceIDAndBarcode(deviceID uint, barcode string) (*model.LabData, error) {
 	labData := &model.LabData{}
 	err := s.db.Where("device_id = ? AND barcode = ?", deviceID, barcode).First(labData).Error
@@ -71,6 +78,7 @@ func (s *LabDataStore) GetByDeviceIDAndBarcode(deviceID uint, barcode string) (*
 	return labData, nil
 }
 
+// GetAll gets all lab data.
 func (s *LabDataStore) GetAll() ([]*model.LabData, error) {
 	labData := []*model.LabData{}
 	err := s.db.Find(&labData).Error
@@ -81,6 +89,7 @@ func (s *LabDataStore) GetAll() ([]*model.LabData, error) {
 	return labData, nil
 }
 
+// Update updates a lab data.
 func (s *LabDataStore) Update(labData *model.LabData) error {
 	err := s.db.Save(labData).Error
 	if err != nil {
@@ -90,6 +99,7 @@ func (s *LabDataStore) Update(labData *model.LabData) error {
 	return nil
 }
 
+// Delete deletes a lab data.
 func (s *LabDataStore) Delete(labData *model.LabData) error {
 	err := s.db.Delete(labData).Error
 	if err != nil {

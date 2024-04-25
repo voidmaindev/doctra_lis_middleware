@@ -2,6 +2,7 @@ package model
 
 import "gorm.io/gorm"
 
+// Device represents a device.
 type Device struct {
 	gorm.Model
 	Name          string `json:"name" gorm:"not null"`

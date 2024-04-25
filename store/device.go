@@ -8,10 +8,12 @@ import (
 	"gorm.io/gorm"
 )
 
+// DeviceStore is the store for the Device model.
 type DeviceStore struct {
 	db *gorm.DB
 }
 
+// NewDeviceStore creates a new DeviceStore.
 func NewDeviceStore(db *gorm.DB) (*DeviceStore, error) {
 	store := &DeviceStore{db: db}
 	err := store.db.AutoMigrate(&model.Device{})
@@ -22,6 +24,7 @@ func NewDeviceStore(db *gorm.DB) (*DeviceStore, error) {
 	return store, nil
 }
 
+// Create creates a new device.
 func (s *DeviceStore) Create(device *model.Device) error {
 	err := s.db.Create(device).Error
 	if err != nil {
@@ -31,6 +34,7 @@ func (s *DeviceStore) Create(device *model.Device) error {
 	return nil
 }
 
+// GetByID gets a device by ID.
 func (s *DeviceStore) GetByID(id uint) (*model.Device, error) {
 	device := &model.Device{}
 	err := s.db.First(device, id).Error
@@ -41,6 +45,7 @@ func (s *DeviceStore) GetByID(id uint) (*model.Device, error) {
 	return device, nil
 }
 
+// GetBySerial gets a device by serial.
 func (s *DeviceStore) GetBySerial(serial string) (*model.Device, error) {
 	device := &model.Device{}
 	err := s.db.Where("serial = ?", serial).First(device).Error
@@ -51,6 +56,7 @@ func (s *DeviceStore) GetBySerial(serial string) (*model.Device, error) {
 	return device, nil
 }
 
+// GetByNetworkAddress gets a device by network address.
 func (s *DeviceStore) GetByNetworkAddress(networkAddress string) (*model.Device, error) {
 	device := &model.Device{}
 	err := s.db.Where("network_address = ?", networkAddress).First(device).Error
@@ -61,6 +67,7 @@ func (s *DeviceStore) GetByNetworkAddress(networkAddress string) (*model.Device,
 	return device, nil
 }
 
+// GetByModelID gets all devices by model ID.
 func (s *DeviceStore) GetByModelID(modelID uint) ([]model.Device, error) {
 	devices := []model.Device{}
 	err := s.db.Where("model_id = ?", modelID).Find(&devices).Error
@@ -71,6 +78,7 @@ func (s *DeviceStore) GetByModelID(modelID uint) ([]model.Device, error) {
 	return devices, nil
 }
 
+// GetAll gets all devices.
 func (s *DeviceStore) GetAll() ([]model.Device, error) {
 	devices := []model.Device{}
 	err := s.db.Find(&devices).Error
@@ -81,6 +89,7 @@ func (s *DeviceStore) GetAll() ([]model.Device, error) {
 	return devices, nil
 }
 
+// Update updates a device.
 func (s *DeviceStore) Update(device *model.Device) error {
 	err := s.db.Save(device).Error
 	if err != nil {
@@ -90,6 +99,7 @@ func (s *DeviceStore) Update(device *model.Device) error {
 	return nil
 }
 
+// Delete deletes a device.
 func (s *DeviceStore) Delete(device *model.Device) error {
 	err := s.db.Delete(device).Error
 	if err != nil {

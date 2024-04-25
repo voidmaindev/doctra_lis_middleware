@@ -1,3 +1,4 @@
+// Package store provides the interface that defines the methods that a store should implement.
 package store
 
 import (
@@ -6,6 +7,7 @@ import (
 	"gorm.io/gorm"
 )
 
+// Store is the store for the application.
 type Store struct {
 	db               *gorm.DB
 	UserStore        *UserStore
@@ -14,6 +16,7 @@ type Store struct {
 	LabDataStore     *LabDataStore
 }
 
+// NewStore creates a new Store.
 func NewStore(log *log.Logger) (*Store, error) {
 	settings, err := config.ReadDBConfig()
 	if err != nil {

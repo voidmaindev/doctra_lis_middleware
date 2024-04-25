@@ -3,12 +3,14 @@ package app
 import (
 	"github.com/voidmaindev/doctra_lis_middleware/config"
 	"github.com/voidmaindev/doctra_lis_middleware/log"
+	"github.com/voidmaindev/doctra_lis_middleware/store"
 )
 
 // DeviceServerApplication is the application for the device server.
 type DeviceServerApplication struct {
 	Log    *log.Logger
 	Config *config.DeviceServerSettings
+	Store  *store.Store
 }
 
 // SetLogger sets the logger for the device server application.
@@ -24,6 +26,12 @@ func (a *DeviceServerApplication) InitApp() error {
 		return err
 	}
 
+	err = a.setStore()
+	if err != nil {
+		a.Log.Error("failed to set a store")
+		return err
+	}
+
 	return nil
 }
 
@@ -34,6 +42,18 @@ func (a *DeviceServerApplication) setConfig() error {
 		return err
 	}
 	a.Config = config
+
+	return nil
+}
+
+func (a *DeviceServerApplication) setStore() error {
+	store, err := store.NewStore(a.Log)
+	if err != nil {
+		a.Log.Error("failed to create a new store")
+		return err
+	}
+
+	a.Store = store
 
 	return nil
 }
