@@ -13,6 +13,7 @@ type ApiServerApplication struct {
 	Log    *log.Logger
 	Config *config.ApiServerSettings
 	Router *fiber.App
+	Store  *store.Store
 }
 
 // SetLogger sets the logger for the API server application.
@@ -32,9 +33,9 @@ func (a *ApiServerApplication) InitApp() error {
 
 	a.setRouter()
 
-	store, err := store.NewStore(a.Log)
+	err = a.setStore()
 	if err != nil {
-		a.Log.Error("failed to create a new store")
+		a.Log.Error("failed to set a store")
 		return err
 	}
 
@@ -54,4 +55,16 @@ func (a *ApiServerApplication) setConfig() error {
 
 func (a *ApiServerApplication) setRouter() {
 	a.Router = api.NewRouter(a.Log.Logger)
+}
+
+func (a *ApiServerApplication) setStore() error {
+	store, err := store.NewStore(a.Log)
+	if err != nil {
+		a.Log.Error("failed to create a new store")
+		return err
+	}
+
+	a.Store = store
+
+	return nil
 }
