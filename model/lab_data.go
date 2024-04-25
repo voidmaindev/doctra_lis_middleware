@@ -9,7 +9,7 @@ import (
 type LabData struct {
 	gorm.Model
 	DeviceID      uint      `json:"device_id" gorm:"not null;index"`
-	Barcode       string    `json:"barcode" gorm:"not null"`
+	Barcode       string    `json:"barcode" gorm:"not null;index"`
 	Param         string    `json:"param" gorm:"not null"`
 	Result        float64   `json:"result" gorm:"not null"`
 	Unit          string    `json:"unit" gorm:"not null"`
