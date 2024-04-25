@@ -51,10 +51,8 @@ func apiResponce(c *fiber.Ctx, status int, message string, data interface{}) err
 		msg = message
 	}
 
-	fm := fiber.Map{}
-	if data == nil {
-		fm = fiber.Map{"success": success, "message": msg}
-	} else {
+	fm := fiber.Map{"success": success, "message": msg}
+	if data != nil {
 		fm = fiber.Map{"success": success, "message": msg, "data": data}
 	}
 
