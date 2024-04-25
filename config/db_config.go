@@ -11,6 +11,7 @@ type DBSettings struct {
 	Host       string
 	Port       string
 	DBName     string
+	CreateDB   bool
 }
 
 // ReadLogConfig reads the log configuration file

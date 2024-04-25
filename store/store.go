@@ -20,7 +20,7 @@ func NewStore(log log.Logger) (*Store, error) {
 	config := &gorm.Config{}
 	db, err := NewDB(settings, config)
 	if err != nil {
-		log.Err(err, "Failed to create a new DB")
+		log.Err(err, "Failed to connect to DB")
 		return nil, err
 	}
 

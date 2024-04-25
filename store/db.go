@@ -12,7 +12,24 @@ import (
 )
 
 func NewDB(settings *config.DBSettings, config *gorm.Config) (*gorm.DB, error) {
-	dsn := getDSN(settings)
+	if settings.CreateDB {
+		dsnWoDBName := getDSN(settings, true)
+		if dsnWoDBName == "" {
+			return nil, errors.New("failed to get DSN without DB name")
+		}
+
+		dbWoDBName, err := newDB(settings, dsnWoDBName)
+		if err != nil {
+			return nil, errors.New("failed to connect to a new DB without DB name")
+		}
+
+		err = createDBIfNotExist(dbWoDBName, settings)
+		if err != nil {
+			return nil, errors.New("failed to create DB if not exist")
+		}
+	}
+
+	dsn := getDSN(settings, false)
 	if dsn == "" {
 		return nil, errors.New("failed to get DSN")
 	}
@@ -29,29 +46,17 @@ func NewDB(settings *config.DBSettings, config *gorm.Config) (*gorm.DB, error) {
 	return nil, errors.New("unsupported sql driver")
 }
 
-func getDSN(settings *config.DBSettings) string {
+func newDB(settings *config.DBSettings, dsn string) (*gorm.DB, error) {
 	switch settings.DriverName {
 	case "sqlserver":
-		return getSQLServerDSN(settings)
+		return getSQLServerDB(dsn, &gorm.Config{})
 	case "postgres":
-		return getPostgresDSN(settings)
+		return getPostgresDB(dsn, &gorm.Config{})
 	case "mysql":
-		return getMySQLDSN(settings)
+		return getMySQLDB(dsn, &gorm.Config{})
 	}
 
-	return ""
-}
-
-func getSQLServerDSN(settings *config.DBSettings) string {
-	return fmt.Sprintf("sqlserver://%s:%s@%s:%s?database=%s", settings.User, settings.Password, settings.Host, settings.Port, settings.DBName)
-}
-
-func getPostgresDSN(settings *config.DBSettings) string {
-	return fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", settings.Host, settings.Port, settings.User, settings.Password, settings.DBName)
-}
-
-func getMySQLDSN(settings *config.DBSettings) string {
-	return fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", settings.User, settings.Password, settings.Host, settings.Port, settings.DBName)
+	return nil, errors.New("unsupported sql driver")
 }
 
 func getSQLServerDB(dsn string, config *gorm.Config) (*gorm.DB, error) {
@@ -79,4 +84,47 @@ func getMySQLDB(dsn string, config *gorm.Config) (*gorm.DB, error) {
 	}
 
 	return db, nil
+}
+
+func createDBIfNotExist(db *gorm.DB, settings *config.DBSettings) error {
+	switch settings.DriverName {
+	case "sqlserver":
+		return createSQLServerDBIfNotExist(db, settings)
+	case "postgres":
+		return createPostgresDBIfNotExist(db, settings)
+	case "mysql":
+		return createMySQLDBIfNotExist(db, settings)
+	}
+
+	return errors.New("unsupported sql driver")
+}
+
+func createSQLServerDBIfNotExist(db *gorm.DB, settings *config.DBSettings) error {
+	sql := fmt.Sprintf("IF NOT EXISTS (SELECT name FROM master.dbo.sysdatabases WHERE name = N'%s') CREATE DATABASE %s", settings.DBName, settings.DBName)
+	err := db.Exec(sql).Error
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func createPostgresDBIfNotExist(db *gorm.DB, settings *config.DBSettings) error {
+	sql := fmt.Sprintf("CREATE DATABASE IF NOT EXISTS %s", settings.DBName)
+	err := db.Exec(sql).Error
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func createMySQLDBIfNotExist(db *gorm.DB, settings *config.DBSettings) error {
+	sql := fmt.Sprintf("CREATE DATABASE IF NOT EXISTS %s", settings.DBName)
+	err := db.Exec(sql).Error
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

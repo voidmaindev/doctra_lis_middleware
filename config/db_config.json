@@ -4,5 +4,6 @@
   "Password": "Ab123456",
   "Host": "localhost",
   "Port": "1433",
-  "DBName": "DoctraLisMiddleware"
+  "DBName": "DoctraLisMiddleware",
+  "CreateDB": true
 }
