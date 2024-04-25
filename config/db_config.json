@@ -1,8 +1,8 @@
 {
   "DriverName": "sqlserver",
-  "DBUser": "sa",
-  "DBPassword": "Ab123456",
-  "DBHost": "localhost",
-  "DBPort": "1433",
+  "User": "sa",
+  "Password": "Ab123456",
+  "Host": "localhost",
+  "Port": "1433",
   "DBName": "DoctraLisMiddleware"
 }

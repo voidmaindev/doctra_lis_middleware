@@ -6,10 +6,10 @@ const dbConfigFile = "config/log_config.json"
 // LogSettings is the struct that holds the log settings
 type DBSettings struct {
 	DriverName string
-	DBUser     string
-	DBPassword string
-	DBHost     string
-	DBPort     string
+	User       string
+	Password   string
+	Host       string
+	Port       string
 	DBName     string
 }
 

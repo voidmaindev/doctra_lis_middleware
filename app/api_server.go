@@ -5,6 +5,7 @@ import (
 	"github.com/voidmaindev/doctra_lis_middleware/api"
 	"github.com/voidmaindev/doctra_lis_middleware/config"
 	"github.com/voidmaindev/doctra_lis_middleware/log"
+	"github.com/voidmaindev/doctra_lis_middleware/store"
 )
 
 // ApiServerApplication is the application for the API server.
@@ -21,6 +22,8 @@ func (a *ApiServerApplication) SetLogger(l *log.Logger) {
 
 // InitApp initializes the API server application.
 func (a *ApiServerApplication) InitApp() error {
+	// var err error
+
 	err := a.setConfig()
 	if err != nil {
 		a.Log.Error("Failed to set the API server config")
@@ -28,6 +31,12 @@ func (a *ApiServerApplication) InitApp() error {
 	}
 
 	a.setRouter()
+
+	store, err := store.NewStore(a.Log)
+	if err != nil {
+		a.Log.Error("Failed to create a new store")
+		return err
+	}
 
 	return nil
 }

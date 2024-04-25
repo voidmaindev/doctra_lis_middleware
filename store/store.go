@@ -1,21 +1,30 @@
 package store
 
-// var DB *gorm.DB
+import (
+	"github.com/voidmaindev/doctra_lis_middleware/config"
+	"github.com/voidmaindev/doctra_lis_middleware/log"
+	"gorm.io/gorm"
+)
 
-// func ConnectToDB() {
-// 	var err error
-
-// 	dsn := os.Getenv("DSN")
-// 	DB, err = gorm.Open(sqlserver.Open(dsn), &gorm.Config{})
-// 	if err != nil {
-// 		log.Fatal(err.Error())
-// 	}
-// }
-
-type Store interface {
-	User()
+type Store struct {
+	db *gorm.DB
 }
 
-func NewStore() *Store {
-	return &Store{}
+func NewStore(log log.Logger) (*Store, error) {
+	settings, err := config.ReadDBConfig()
+	if err != nil {
+		log.Error("Failed to read the DB config")
+		return nil, err
+	}
+
+	config := &gorm.Config{}
+	db, err := NewDB(settings, config)
+	if err != nil {
+		log.Err(err, "Failed to create a new DB")
+		return nil, err
+	}
+
+	store := &Store{db: db}
+
+	return store, nil
 }
