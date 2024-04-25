@@ -14,18 +14,7 @@ type DB interface {
 }
 
 func NewDB(settings *config.DBSettings, config *gorm.Config) (*gorm.DB, error) {
-	var sqlDB DB
-
-	switch settings.DriverName {
-	case "sqlserver":
-		sqlDB = newSQLServerDB()
-	case "postgres":
-		sqlDB = newPostgresDB()
-	case "mysql":
-		sqlDB = newMySQLDB()
-	default:
-		return nil, errors.New("unsupported sql driver")
-	}
+	sqlDB := getSqlDB(settings)
 
 	if settings.CreateDB {
 		dsnWoDBName := sqlDB.getDSN(settings, true)
@@ -50,4 +39,19 @@ func NewDB(settings *config.DBSettings, config *gorm.Config) (*gorm.DB, error) {
 	}
 
 	return sqlDB.newDB(settings, dsn)
+}
+
+func getSqlDB(settings *config.DBSettings) DB {
+	var sqlDB DB
+
+	switch settings.DriverName {
+	case "sqlserver":
+		sqlDB = newSQLServerDB()
+	case "postgres":
+		sqlDB = newPostgresDB()
+	case "mysql":
+		sqlDB = newMySQLDB()
+	}
+
+	return sqlDB
 }

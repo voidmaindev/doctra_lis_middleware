@@ -20,7 +20,7 @@ func (a *DeviceServerApplication) SetLogger(l *log.Logger) {
 func (a *DeviceServerApplication) InitApp() error {
 	err := a.setConfig()
 	if err != nil {
-		a.Log.Error("Failed to set the device server config")
+		a.Log.Error("failed to set the device server config")
 		return err
 	}
 
@@ -30,7 +30,7 @@ func (a *DeviceServerApplication) InitApp() error {
 func (a *DeviceServerApplication) setConfig() error {
 	config, err := config.ReadDeviceServerConfig()
 	if err != nil {
-		a.Log.Err(err, "Failed to read the device server config")
+		a.Log.Err(err, "failed to read the device server config")
 		return err
 	}
 	a.Config = config

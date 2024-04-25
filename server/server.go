@@ -35,7 +35,7 @@ func (s *Server) Start() error {
 
 	err := s.App.InitApp()
 	if err != nil {
-		s.Log.Error("Failed to initialize the application")
+		s.Log.Error("failed to initialize the application")
 		return err
 	}
 

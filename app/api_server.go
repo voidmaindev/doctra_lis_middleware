@@ -26,7 +26,7 @@ func (a *ApiServerApplication) InitApp() error {
 
 	err := a.setConfig()
 	if err != nil {
-		a.Log.Error("Failed to set the API server config")
+		a.Log.Error("failed to set the API server config")
 		return err
 	}
 
@@ -34,7 +34,7 @@ func (a *ApiServerApplication) InitApp() error {
 
 	store, err := store.NewStore(a.Log)
 	if err != nil {
-		a.Log.Error("Failed to create a new store")
+		a.Log.Error("failed to create a new store")
 		return err
 	}
 
@@ -44,7 +44,7 @@ func (a *ApiServerApplication) InitApp() error {
 func (a *ApiServerApplication) setConfig() error {
 	config, err := config.ReadApiServerConfig()
 	if err != nil {
-		a.Log.Err(err, "Failed to read the API server config")
+		a.Log.Err(err, "failed to read the API server config")
 		return err
 	}
 	a.Config = config
