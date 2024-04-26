@@ -1,7 +1,7 @@
 package config
 
 // dbConfigFile is the path to the log configuration file
-const dbConfigFile = "config/log_config.json"
+const dbConfigFile = "config/db_config.json"
 
 // LogSettings is the struct that holds the log settings
 type DBSettings struct {

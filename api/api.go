@@ -33,7 +33,13 @@ func NewAPI(logger *log.Logger, router *fiber.App, store *store.Store) (*API, er
 		Store:  store,
 	}
 
+	api.Root.Use(func(c *fiber.Ctx) error {
+		c.Locals("api", api)
+		return c.Next()
+	})
+
 	api.APIRoot = api.Root.Group(apiRootPath)
+
 	api.initUserAPI()
 	api.initDeviceModelAPI()
 	api.initDeviceAPI()
@@ -56,7 +62,7 @@ func getApiFromContext(c *fiber.Ctx) (*API, error) {
 
 // apiResponse sends a response.
 func apiResponse(c *fiber.Ctx, status int, message string, data interface{}) error {
-	success, msg := true, ""
+	success, msg := true, "success"
 	if status != fiber.StatusOK {
 		success = false
 		msg = message

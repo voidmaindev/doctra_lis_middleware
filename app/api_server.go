@@ -85,12 +85,19 @@ func (a *ApiServerApplication) setAPI() error {
 		return err
 	}
 
-	api.Root.Use(func(c *fiber.Ctx) {
-		c.Locals("api", api)
-		c.Next()
-	})
-
 	a.API = api
+
+	return nil
+}
+
+// Start starts the API server application.
+func (a *ApiServerApplication) Start() error {
+	address := a.Config.Host + ":" + a.Config.Port
+	err := a.Router.Listen(address)
+	if err != nil {
+		a.Log.Err(err, "failed to start the API server")
+		return err
+	}
 
 	return nil
 }

@@ -39,6 +39,12 @@ func (s *Server) Start() error {
 		return err
 	}
 
+	err = s.App.Start()
+	if err != nil {
+		s.Log.Error("failed to start the application")
+		return err
+	}
+
 	return nil
 }
 

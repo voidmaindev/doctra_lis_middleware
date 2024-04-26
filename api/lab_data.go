@@ -148,7 +148,7 @@ func createLabData(c *fiber.Ctx) error {
 		return apiResponseError(c, fiber.StatusInternalServerError, "failed to create the lab data")
 	}
 
-	return apiResponseData(c, fiber.StatusOK, labData)
+	return apiResponseData(c, fiber.StatusOK, labData.ID)
 }
 
 // updateLabData updates a lab data.
@@ -181,7 +181,7 @@ func updateLabData(c *fiber.Ctx) error {
 		return apiResponseError(c, fiber.StatusInternalServerError, "failed to update the lab data")
 	}
 
-	return apiResponseData(c, fiber.StatusOK, labData)
+	return apiResponseData(c, fiber.StatusOK, labData.ID)
 }
 
 // deleteLabData deletes a lab data.
@@ -209,5 +209,5 @@ func deleteLabData(c *fiber.Ctx) error {
 		return apiResponseError(c, fiber.StatusInternalServerError, "failed to delete the lab data")
 	}
 
-	return apiResponseData(c, fiber.StatusOK, labData)
+	return apiResponseData(c, fiber.StatusOK, labData.ID)
 }

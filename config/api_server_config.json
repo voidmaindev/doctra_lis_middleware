@@ -1,3 +1,4 @@
 {
-  "APIPort": 9090
+  "Host": "localhost",
+  "Port": "10080"
 }

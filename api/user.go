@@ -14,8 +14,9 @@ func (api *API) initUserAPI() {
 
 	api.Users.Post("/register", registerUser)
 	api.Users.Post("/token", token)
-	
+
 	api.Users.Use(isAuthorized)
+
 	api.Users.Get("/", getUsers)
 }
 
@@ -63,7 +64,7 @@ func registerUser(c *fiber.Ctx) error {
 		return apiResponseError(c, fiber.StatusInternalServerError, "failed to create the user")
 	}
 
-	return apiResponseData(c, fiber.StatusOK, user)
+	return apiResponseData(c, fiber.StatusOK, user.Username)
 }
 
 // token generates a JWT token.

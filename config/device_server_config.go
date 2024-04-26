@@ -1,7 +1,7 @@
 package config
 
 // deviceServerConfigFile is the path to the log configuration file
-const deviceServerConfigFile = "config/api_server_config.json"
+const deviceServerConfigFile = "config/device_server_config.json"
 
 // DeviceServerSettings is the struct that holds the log settings
 type DeviceServerSettings struct {

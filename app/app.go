@@ -8,4 +8,5 @@ type App interface {
 	SetLogger(*log.Logger)
 	InitApp() error
 	setConfig() error
+	Start() error
 }

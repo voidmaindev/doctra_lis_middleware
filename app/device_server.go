@@ -59,3 +59,9 @@ func (a *DeviceServerApplication) setStore() error {
 
 	return nil
 }
+
+// Run runs the device server application.
+func (a *DeviceServerApplication) Start() error {
+	a.Log.Info("starting the device server")
+	return nil
+}

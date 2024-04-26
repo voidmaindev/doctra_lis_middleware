@@ -23,10 +23,10 @@ func NewRouter(logger *zerolog.Logger) *fiber.App {
 
 // newCors creates a new CORS middleware.
 func newCors() fiber.Handler {
-	return cors.New(cors.Config{
-		AllowHeaders:     "Origin,Content-Type,Accept,Content-Length,Accept-Language,Accept-Encoding,Connection,Access-Control-Allow-Origin",
-		AllowOrigins:     "*",
-		AllowCredentials: true,
+	corsConfig := cors.Config{
+		AllowHeaders: "Origin,Content-Type,Accept,Content-Length,Accept-Language,Accept-Encoding,Connection,Access-Control-Allow-Origin",
+		AllowOrigins: "*",
+		// AllowCredentials: true,
 		AllowMethods: strings.Join([]string{
 			fiber.MethodGet,
 			fiber.MethodPost,
@@ -36,5 +36,7 @@ func newCors() fiber.Handler {
 			fiber.MethodPatch,
 			fiber.MethodOptions,
 		}, ","),
-	})
+	}
+
+	return cors.New(corsConfig)
 }

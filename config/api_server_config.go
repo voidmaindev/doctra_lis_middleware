@@ -5,7 +5,8 @@ const apiServerConfigFile = "config/api_server_config.json"
 
 // ApiServerSettings is the struct that holds the log settings
 type ApiServerSettings struct {
-	APIPort    string
+	Host       string
+	Port       string
 	DBSettings *DBSettings
 }
 

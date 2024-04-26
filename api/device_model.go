@@ -80,7 +80,7 @@ func createDeviceModel(c *fiber.Ctx) error {
 		return apiResponseError(c, fiber.StatusInternalServerError, "failed to create the device model")
 	}
 
-	return apiResponseData(c, fiber.StatusOK, deviceModel)
+	return apiResponseData(c, fiber.StatusOK, deviceModel.ID)
 }
 
 // updateDeviceModel updates a device model.
@@ -113,7 +113,7 @@ func updateDeviceModel(c *fiber.Ctx) error {
 		return apiResponseError(c, fiber.StatusInternalServerError, "failed to update the device model")
 	}
 
-	return apiResponseData(c, fiber.StatusOK, deviceModel)
+	return apiResponseData(c, fiber.StatusOK, deviceModel.ID)
 }
 
 // deleteDeviceModel deletes a device model.
@@ -141,5 +141,5 @@ func deleteDeviceModel(c *fiber.Ctx) error {
 		return apiResponseError(c, fiber.StatusInternalServerError, "failed to delete the device model")
 	}
 
-	return apiResponseData(c, fiber.StatusOK, deviceModel)
+	return apiResponseData(c, fiber.StatusOK, deviceModel.ID)
 }
