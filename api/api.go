@@ -31,6 +31,11 @@ func NewAPI(logger *log.Logger, router *fiber.App, store *store.Store) (*API, er
 
 	api.APIRoot = api.Root.Group(apiRootPath)
 	api.initUserAPI()
+	api.initDeviceModelAPI()
+	api.initDeviceAPI()
+	api.initLabDataAPI()
+
+	api.addNoRoute()
 
 	return api, nil
 }
@@ -66,3 +71,10 @@ func apiResponseError(c *fiber.Ctx, status int, message string) error {
 func apiResponseData(c *fiber.Ctx, status int, data interface{}) error {
 	return apiResponse(c, status, "", data)
 }
+
+func (api *API)addNoRoute() {
+	api.Root.Use(func(c *fiber.Ctx) error {
+		return apiResponseError(c, fiber.StatusNotFound, "not found")
+	})
+}
+
