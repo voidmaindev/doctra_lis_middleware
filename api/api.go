@@ -40,13 +40,13 @@ func NewAPI(logger *log.Logger, router *fiber.App, store *store.Store) (*API, er
 	return api, nil
 }
 
-func getAppFromContext(c *fiber.Ctx) (*API, error) {
-	app, ok := c.Locals("app").(*API)
+func getApiFromContext(c *fiber.Ctx) (*API, error) {
+	api, ok := c.Locals("api").(*API)
 	if !ok {
 		return nil, errors.New("failed to get the app from context")
 	}
 
-	return app, nil
+	return api, nil
 }
 
 func apiResponse(c *fiber.Ctx, status int, message string, data interface{}) error {
@@ -72,9 +72,8 @@ func apiResponseData(c *fiber.Ctx, status int, data interface{}) error {
 	return apiResponse(c, status, "", data)
 }
 
-func (api *API)addNoRoute() {
+func (api *API) addNoRoute() {
 	api.Root.Use(func(c *fiber.Ctx) error {
 		return apiResponseError(c, fiber.StatusNotFound, "not found")
 	})
 }
-

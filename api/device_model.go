@@ -10,6 +10,8 @@ const deviceModelAPIPath = "/device_models"
 func (api *API) initDeviceModelAPI() {
 	api.DeviceModels = api.APIRoot.Group(deviceModelAPIPath)
 
+	api.DeviceModels.Use(isAuthorized)
+	
 	api.DeviceModels.Get("/", getDeviceModels)
 	api.DeviceModels.Get("/:id", getDeviceModel)
 	api.DeviceModels.Post("/", createDeviceModel)
@@ -18,15 +20,15 @@ func (api *API) initDeviceModelAPI() {
 }
 
 func getDeviceModels(c *fiber.Ctx) error {
-	app, err := getAppFromContext(c)
+	api, err := getApiFromContext(c)
 	if err != nil {
-		app.Logger.Err(err, "failed to get the app from context")
+		api.Logger.Err(err, "failed to get the app from context")
 		return apiResponseError(c, fiber.StatusInternalServerError, "failed to get the app from context")
 	}
 
-	deviceModels, err := app.Store.DeviceModelStore.GetAll()
+	deviceModels, err := api.Store.DeviceModelStore.GetAll()
 	if err != nil {
-		app.Logger.Err(err, "failed to get device models")
+		api.Logger.Err(err, "failed to get device models")
 		return apiResponseError(c, fiber.StatusInternalServerError, "failed to get device models")
 	}
 
@@ -34,21 +36,21 @@ func getDeviceModels(c *fiber.Ctx) error {
 }
 
 func getDeviceModel(c *fiber.Ctx) error {
-	app, err := getAppFromContext(c)
+	api, err := getApiFromContext(c)
 	if err != nil {
-		app.Logger.Err(err, "failed to get the app from context")
+		api.Logger.Err(err, "failed to get the app from context")
 		return apiResponseError(c, fiber.StatusInternalServerError, "failed to get the app from context")
 	}
 
 	id, err := c.ParamsInt("id")
 	if err != nil {
-		app.Logger.Err(err, "failed to parse the ID")
+		api.Logger.Err(err, "failed to parse the ID")
 		return apiResponseError(c, fiber.StatusBadRequest, "failed to parse the ID")
 	}
 
-	deviceModel, err := app.Store.DeviceModelStore.GetByID(uint(id))
+	deviceModel, err := api.Store.DeviceModelStore.GetByID(uint(id))
 	if err != nil {
-		app.Logger.Err(err, "failed to get the device model")
+		api.Logger.Err(err, "failed to get the device model")
 		return apiResponseError(c, fiber.StatusInternalServerError, "failed to get the device model")
 	}
 
@@ -56,20 +58,20 @@ func getDeviceModel(c *fiber.Ctx) error {
 }
 
 func createDeviceModel(c *fiber.Ctx) error {
-	app, err := getAppFromContext(c)
+	api, err := getApiFromContext(c)
 	if err != nil {
-		app.Logger.Err(err, "failed to get the app from context")
+		api.Logger.Err(err, "failed to get the app from context")
 		return apiResponseError(c, fiber.StatusInternalServerError, "failed to get the app from context")
 	}
 
 	deviceModel := &model.DeviceModel{}
 	if err := c.BodyParser(deviceModel); err != nil {
-		app.Logger.Err(err, "failed to parse the request body")
+		api.Logger.Err(err, "failed to parse the request body")
 		return apiResponseError(c, fiber.StatusBadRequest, "failed to parse the request body")
 	}
 
-	if err := app.Store.DeviceModelStore.Create(deviceModel); err != nil {
-		app.Logger.Err(err, "failed to create the device model")
+	if err := api.Store.DeviceModelStore.Create(deviceModel); err != nil {
+		api.Logger.Err(err, "failed to create the device model")
 		return apiResponseError(c, fiber.StatusInternalServerError, "failed to create the device model")
 	}
 
@@ -77,31 +79,31 @@ func createDeviceModel(c *fiber.Ctx) error {
 }
 
 func updateDeviceModel(c *fiber.Ctx) error {
-	app, err := getAppFromContext(c)
+	api, err := getApiFromContext(c)
 	if err != nil {
-		app.Logger.Err(err, "failed to get the app from context")
+		api.Logger.Err(err, "failed to get the app from context")
 		return apiResponseError(c, fiber.StatusInternalServerError, "failed to get the app from context")
 	}
 
 	id, err := c.ParamsInt("id")
 	if err != nil {
-		app.Logger.Err(err, "failed to parse the ID")
+		api.Logger.Err(err, "failed to parse the ID")
 		return apiResponseError(c, fiber.StatusBadRequest, "failed to parse the ID")
 	}
 
-	deviceModel, err := app.Store.DeviceModelStore.GetByID(uint(id))
+	deviceModel, err := api.Store.DeviceModelStore.GetByID(uint(id))
 	if err != nil {
-		app.Logger.Err(err, "failed to get the device model")
+		api.Logger.Err(err, "failed to get the device model")
 		return apiResponseError(c, fiber.StatusInternalServerError, "failed to get the device model")
 	}
 
 	if err := c.BodyParser(deviceModel); err != nil {
-		app.Logger.Err(err, "failed to parse the request body")
+		api.Logger.Err(err, "failed to parse the request body")
 		return apiResponseError(c, fiber.StatusBadRequest, "failed to parse the request body")
 	}
 
-	if err := app.Store.DeviceModelStore.Update(deviceModel); err != nil {
-		app.Logger.Err(err, "failed to update the device model")
+	if err := api.Store.DeviceModelStore.Update(deviceModel); err != nil {
+		api.Logger.Err(err, "failed to update the device model")
 		return apiResponseError(c, fiber.StatusInternalServerError, "failed to update the device model")
 	}
 
@@ -109,26 +111,26 @@ func updateDeviceModel(c *fiber.Ctx) error {
 }
 
 func deleteDeviceModel(c *fiber.Ctx) error {
-	app, err := getAppFromContext(c)
+	api, err := getApiFromContext(c)
 	if err != nil {
-		app.Logger.Err(err, "failed to get the app from context")
+		api.Logger.Err(err, "failed to get the app from context")
 		return apiResponseError(c, fiber.StatusInternalServerError, "failed to get the app from context")
 	}
 
 	id, err := c.ParamsInt("id")
 	if err != nil {
-		app.Logger.Err(err, "failed to parse the ID")
+		api.Logger.Err(err, "failed to parse the ID")
 		return apiResponseError(c, fiber.StatusBadRequest, "failed to parse the ID")
 	}
 
-	deviceModel, err := app.Store.DeviceModelStore.GetByID(uint(id))
+	deviceModel, err := api.Store.DeviceModelStore.GetByID(uint(id))
 	if err != nil {
-		app.Logger.Err(err, "failed to get the device model")
+		api.Logger.Err(err, "failed to get the device model")
 		return apiResponseError(c, fiber.StatusInternalServerError, "failed to get the device model")
 	}
 
-	if err := app.Store.DeviceModelStore.Delete(deviceModel); err != nil {
-		app.Logger.Err(err, "failed to delete the device model")
+	if err := api.Store.DeviceModelStore.Delete(deviceModel); err != nil {
+		api.Logger.Err(err, "failed to delete the device model")
 		return apiResponseError(c, fiber.StatusInternalServerError, "failed to delete the device model")
 	}
 

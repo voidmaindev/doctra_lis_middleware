@@ -86,7 +86,6 @@ func (a *ApiServerApplication) setAPI() error {
 	}
 
 	api.Root.Use(func(c *fiber.Ctx) {
-		c.Locals("app", a)
 		c.Locals("api", api)
 		c.Next()
 	})
