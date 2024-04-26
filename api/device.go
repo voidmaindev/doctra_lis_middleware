@@ -5,8 +5,10 @@ import (
 	"github.com/voidmaindev/doctra_lis_middleware/model"
 )
 
+// deviceAPIPath is the path for the device API.
 const deviceAPIPath = "/devices"
 
+// initDeviceAPI initializes the device API.
 func (api *API) initDeviceAPI() {
 	api.Devices = api.APIRoot.Group(deviceAPIPath)
 
@@ -19,6 +21,7 @@ func (api *API) initDeviceAPI() {
 	api.Devices.Delete("/:id", deleteDevice)
 }
 
+// getDevices gets all devices.
 func getDevices(c *fiber.Ctx) error {
 	api, err := getApiFromContext(c)
 	if err != nil {
@@ -35,6 +38,7 @@ func getDevices(c *fiber.Ctx) error {
 	return apiResponseData(c, fiber.StatusOK, devices)
 }
 
+// getDevice gets a device by ID.
 func getDevice(c *fiber.Ctx) error {
 	api, err := getApiFromContext(c)
 	if err != nil {
@@ -57,6 +61,7 @@ func getDevice(c *fiber.Ctx) error {
 	return apiResponseData(c, fiber.StatusOK, device)
 }
 
+// createDevice creates a new device.
 func createDevice(c *fiber.Ctx) error {
 	api, err := getApiFromContext(c)
 	if err != nil {
@@ -78,6 +83,7 @@ func createDevice(c *fiber.Ctx) error {
 	return apiResponseData(c, fiber.StatusCreated, device)
 }
 
+// updateDevice updates a device.
 func updateDevice(c *fiber.Ctx) error {
 	api, err := getApiFromContext(c)
 	if err != nil {
@@ -110,6 +116,7 @@ func updateDevice(c *fiber.Ctx) error {
 	return apiResponseData(c, fiber.StatusOK, device)
 }
 
+// deleteDevice deletes a device.
 func deleteDevice(c *fiber.Ctx) error {
 	api, err := getApiFromContext(c)
 	if err != nil {

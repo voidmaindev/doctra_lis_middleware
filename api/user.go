@@ -5,8 +5,10 @@ import (
 	"github.com/voidmaindev/doctra_lis_middleware/model"
 )
 
+// userAPIPath is the path for the user API.
 const userAPIPath = "/users"
 
+// initUserAPI initializes the user API.
 func (api *API) initUserAPI() {
 	api.Users = api.APIRoot.Group(userAPIPath)
 
@@ -17,6 +19,7 @@ func (api *API) initUserAPI() {
 	api.Users.Get("/", getUsers)
 }
 
+// getUsers gets all users.
 func getUsers(c *fiber.Ctx) error {
 	api, err := getApiFromContext(c)
 	if err != nil {
@@ -33,6 +36,7 @@ func getUsers(c *fiber.Ctx) error {
 	return apiResponseData(c, fiber.StatusOK, users)
 }
 
+// registerUser registers a user.
 func registerUser(c *fiber.Ctx) error {
 	api, err := getApiFromContext(c)
 	if err != nil {
@@ -62,6 +66,7 @@ func registerUser(c *fiber.Ctx) error {
 	return apiResponseData(c, fiber.StatusOK, user)
 }
 
+// token generates a JWT token.
 func token(c *fiber.Ctx) error {
 	api, err := getApiFromContext(c)
 	if err != nil {
@@ -81,7 +86,7 @@ func token(c *fiber.Ctx) error {
 		return apiResponseError(c, fiber.StatusInternalServerError, "failed to get the user by username")
 	}
 
-	if user == nil || !user.ComparePassword(credentials.Password) {
+	if user == nil || !user.CheckPassword(credentials.Password) {
 		return apiResponseError(c, fiber.StatusUnauthorized, "invalid username or password")
 	}
 

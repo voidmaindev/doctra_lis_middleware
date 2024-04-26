@@ -22,6 +22,7 @@ type User struct {
 	Role     string `json:"role,omitempty" gorm:"not null;index"`
 }
 
+// HashPassword hashes the password.
 func (u *User) HashPassword() error {
 	hash, err := bcrypt.GenerateFromPassword([]byte(u.Password), defaultHashCost)
 	if err != nil {
@@ -33,21 +34,25 @@ func (u *User) HashPassword() error {
 	return nil
 }
 
-func (u *User) ComparePassword(password string) bool {
+// CheckPassword checks the password.
+func (u *User) CheckPassword(password string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(password))
 	return err == nil
 }
 
+// SetDefaultRole sets the default role.
 func (u *User) SetDefaultRole() {
 	if u.Role == "" {
 		u.Role = RoleUser
 	}
 }
 
+// IsAdmin checks if the user is an admin.
 func (u *User) IsAdmin() bool {
 	return u.Role == RoleAdmin
 }
 
+// IsUser checks if the user is a user.
 func (u *User) IsUser() bool {
 	return u.Role == RoleUser
 }

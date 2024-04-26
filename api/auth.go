@@ -13,17 +13,20 @@ const (
 	jwtSecret = "lksjfowejr!@#1ejk12ESLdKJHk12QW:Lsdfakl123"
 )
 
+// authUser is the structure for the authentication user.
 type authUser struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
 }
 
+// jwtCustomClaims is the custom claims for the JWT token.
 type jwtCustomClaims struct {
 	Username string `json:"username"`
 	Role     string `json:"role"`
 	jwt.RegisteredClaims
 }
 
+// GenerateJWTToken generates a JWT token.
 func GenerateJWTToken(user *model.User) (string, error) {
 	claims := &jwtCustomClaims{
 		Username: user.Username,
@@ -46,6 +49,7 @@ func GenerateJWTToken(user *model.User) (string, error) {
 	return tokenString, nil
 }
 
+// parseJWTToken parses a JWT token.
 func parseJWTToken(token string) (*jwtCustomClaims, error) {
 	claims := &jwtCustomClaims{}
 
@@ -59,6 +63,7 @@ func parseJWTToken(token string) (*jwtCustomClaims, error) {
 	return claims, nil
 }
 
+// isAuthorized is a middleware to check if the user is authorized.
 func isAuthorized(c *fiber.Ctx) error {
 	api, err := getApiFromContext(c)
 	if err != nil {

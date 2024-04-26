@@ -5,13 +5,15 @@ import (
 	"github.com/voidmaindev/doctra_lis_middleware/model"
 )
 
+// deviceModelAPIPath is the path for the device model API.
 const deviceModelAPIPath = "/device_models"
 
+// initDeviceModelAPI initializes the device model API.
 func (api *API) initDeviceModelAPI() {
 	api.DeviceModels = api.APIRoot.Group(deviceModelAPIPath)
 
 	api.DeviceModels.Use(isAuthorized)
-	
+
 	api.DeviceModels.Get("/", getDeviceModels)
 	api.DeviceModels.Get("/:id", getDeviceModel)
 	api.DeviceModels.Post("/", createDeviceModel)
@@ -19,6 +21,7 @@ func (api *API) initDeviceModelAPI() {
 	api.DeviceModels.Delete("/:id", deleteDeviceModel)
 }
 
+// getDeviceModels gets all device models.
 func getDeviceModels(c *fiber.Ctx) error {
 	api, err := getApiFromContext(c)
 	if err != nil {
@@ -35,6 +38,7 @@ func getDeviceModels(c *fiber.Ctx) error {
 	return apiResponseData(c, fiber.StatusOK, deviceModels)
 }
 
+// getDeviceModel gets a device model by ID.
 func getDeviceModel(c *fiber.Ctx) error {
 	api, err := getApiFromContext(c)
 	if err != nil {
@@ -57,6 +61,7 @@ func getDeviceModel(c *fiber.Ctx) error {
 	return apiResponseData(c, fiber.StatusOK, deviceModel)
 }
 
+// createDeviceModel creates a new device model.
 func createDeviceModel(c *fiber.Ctx) error {
 	api, err := getApiFromContext(c)
 	if err != nil {
@@ -78,6 +83,7 @@ func createDeviceModel(c *fiber.Ctx) error {
 	return apiResponseData(c, fiber.StatusOK, deviceModel)
 }
 
+// updateDeviceModel updates a device model.
 func updateDeviceModel(c *fiber.Ctx) error {
 	api, err := getApiFromContext(c)
 	if err != nil {
@@ -110,6 +116,7 @@ func updateDeviceModel(c *fiber.Ctx) error {
 	return apiResponseData(c, fiber.StatusOK, deviceModel)
 }
 
+// deleteDeviceModel deletes a device model.
 func deleteDeviceModel(c *fiber.Ctx) error {
 	api, err := getApiFromContext(c)
 	if err != nil {

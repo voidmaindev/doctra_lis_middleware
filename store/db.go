@@ -14,6 +14,7 @@ type DB interface {
 	createDBIfNotExist(db *gorm.DB, settings *config.DBSettings) error
 }
 
+// NewDB creates a new database.
 func NewDB(settings *config.DBSettings, config *gorm.Config) (*gorm.DB, error) {
 	sqlDB := getSqlDB(settings)
 
@@ -42,6 +43,7 @@ func NewDB(settings *config.DBSettings, config *gorm.Config) (*gorm.DB, error) {
 	return sqlDB.newDB(settings, dsn)
 }
 
+// getSqlDB returns the SQL database based on the driver name.
 func getSqlDB(settings *config.DBSettings) DB {
 	var sqlDB DB
 
