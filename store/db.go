@@ -56,3 +56,4 @@ func getSqlDB(settings *config.DBSettings) DB {
 
 	return sqlDB
 }
+

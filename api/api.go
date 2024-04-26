@@ -44,7 +44,7 @@ func getAppFromContext(c *fiber.Ctx) (*API, error) {
 	return app, nil
 }
 
-func apiResponce(c *fiber.Ctx, status int, message string, data interface{}) error {
+func apiResponse(c *fiber.Ctx, status int, message string, data interface{}) error {
 	success, msg := true, ""
 	if status != fiber.StatusOK {
 		success = false
@@ -59,10 +59,10 @@ func apiResponce(c *fiber.Ctx, status int, message string, data interface{}) err
 	return c.Status(status).JSON(fm)
 }
 
-func apiResponceError(c *fiber.Ctx, status int, message string) error {
-	return apiResponce(c, status, message, nil)
+func apiResponseError(c *fiber.Ctx, status int, message string) error {
+	return apiResponse(c, status, message, nil)
 }
 
-func apiResponceData(c *fiber.Ctx, status int, data interface{}) error {
-	return apiResponce(c, status, "", data)
+func apiResponseData(c *fiber.Ctx, status int, data interface{}) error {
+	return apiResponse(c, status, "", data)
 }

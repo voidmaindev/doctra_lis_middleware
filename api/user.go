@@ -16,14 +16,14 @@ func getUsers(c *fiber.Ctx) error {
 	app, err := getAppFromContext(c)
 	if err != nil {
 		app.Logger.Err(err, "failed to get the app from context")
-		return apiResponceError(c, fiber.StatusInternalServerError, "failed to get the app from context")
+		return apiResponseError(c, fiber.StatusInternalServerError, "failed to get the app from context")
 	}
 
 	users, err := app.Store.UserStore.GetAll()
 	if err != nil {
 		app.Logger.Err(err, "failed to get users")
-		return apiResponceError(c, fiber.StatusInternalServerError, "failed to get users")
+		return apiResponseError(c, fiber.StatusInternalServerError, "failed to get users")
 	}
 
-	return apiResponceData(c, fiber.StatusOK, users)
+	return apiResponseData(c, fiber.StatusOK, users)
 }
