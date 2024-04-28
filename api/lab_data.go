@@ -38,7 +38,7 @@ func getLabDatas(c *fiber.Ctx) error {
 		return apiResponseError(c, fiber.StatusInternalServerError, "failed to get lab datas")
 	}
 
-	return apiResponseData(c, fiber.StatusOK, labDatas)
+	return apiResponseData(c, fiber.StatusOK, NewAPIRV("lab_data", labDatas))
 }
 
 // getLabData gets a lab data by ID.
@@ -61,7 +61,7 @@ func getLabData(c *fiber.Ctx) error {
 		return apiResponseError(c, fiber.StatusInternalServerError, "failed to get the lab data")
 	}
 
-	return apiResponseData(c, fiber.StatusOK, labData)
+	return apiResponseData(c, fiber.StatusOK, NewAPIRV("lab_data", labData))
 }
 
 // getLabDataByBarcode gets a lab data by barcode.
@@ -73,13 +73,13 @@ func getLabDataByBarcode(c *fiber.Ctx) error {
 	}
 
 	barcode := c.Params("barcode")
-	labDatas, err := api.Store.LabDataStore.GetByBarcode(barcode)
+	labData, err := api.Store.LabDataStore.GetByBarcode(barcode)
 	if err != nil {
 		api.Logger.Err(err, "failed to get the lab data by barcode")
 		return apiResponseError(c, fiber.StatusInternalServerError, "failed to get the lab data by barcode")
 	}
 
-	return apiResponseData(c, fiber.StatusOK, labDatas)
+	return apiResponseData(c, fiber.StatusOK, NewAPIRV("lab_data", labData))
 }
 
 // getLabDataByDeviceID gets lab data by device ID.
@@ -96,13 +96,13 @@ func getLabDataByDeviceID(c *fiber.Ctx) error {
 		return apiResponseError(c, fiber.StatusBadRequest, "failed to parse the device ID")
 	}
 
-	labDatas, err := api.Store.LabDataStore.GetByDeviceID(uint(deviceID))
+	labData, err := api.Store.LabDataStore.GetByDeviceID(uint(deviceID))
 	if err != nil {
 		api.Logger.Err(err, "failed to get the lab data by device ID")
 		return apiResponseError(c, fiber.StatusInternalServerError, "failed to get the lab data by device ID")
 	}
 
-	return apiResponseData(c, fiber.StatusOK, labDatas)
+	return apiResponseData(c, fiber.StatusOK, NewAPIRV("lab_data", labData))
 }
 
 // getLabDataByDeviceIDAndBarcode gets a lab data by device ID and barcode.
@@ -126,7 +126,7 @@ func getLabDataByDeviceIDAndBarcode(c *fiber.Ctx) error {
 		return apiResponseError(c, fiber.StatusInternalServerError, "failed to get the lab data by device ID and barcode")
 	}
 
-	return apiResponseData(c, fiber.StatusOK, labData)
+	return apiResponseData(c, fiber.StatusOK, NewAPIRV("lab_data", labData))
 }
 
 // createLabData creates a new lab data.
@@ -148,7 +148,7 @@ func createLabData(c *fiber.Ctx) error {
 		return apiResponseError(c, fiber.StatusInternalServerError, "failed to create the lab data")
 	}
 
-	return apiResponseData(c, fiber.StatusOK, labData.ID)
+	return apiResponseData(c, fiber.StatusOK, NewAPIRV("id", labData.ID))
 }
 
 // updateLabData updates a lab data.
@@ -181,7 +181,7 @@ func updateLabData(c *fiber.Ctx) error {
 		return apiResponseError(c, fiber.StatusInternalServerError, "failed to update the lab data")
 	}
 
-	return apiResponseData(c, fiber.StatusOK, labData.ID)
+	return apiResponseData(c, fiber.StatusOK, NewAPIRV("id", labData.ID))
 }
 
 // deleteLabData deletes a lab data.
@@ -209,5 +209,5 @@ func deleteLabData(c *fiber.Ctx) error {
 		return apiResponseError(c, fiber.StatusInternalServerError, "failed to delete the lab data")
 	}
 
-	return apiResponseData(c, fiber.StatusOK, labData.ID)
+	return apiResponseData(c, fiber.StatusOK, NewAPIRV("id", labData.ID))
 }

@@ -11,6 +11,7 @@ import (
 const (
 	jwtTTL    = 24 * time.Hour
 	jwtSecret = "lksjfowejr!@#1ejk12ESLdKJHk12QW:Lsdfakl123"
+	bearer    = "bearer "
 )
 
 // authUser is the structure for the authentication user.
@@ -72,10 +73,12 @@ func isAuthorized(c *fiber.Ctx) error {
 	}
 
 	token := c.Get("Authorization")
-	if token == "" {
+	if token == "" || len(token) <= len(bearer) {
 		api.Logger.Info("no token provided")
 		return apiResponseError(c, fiber.StatusUnauthorized, "no token provided")
 	}
+
+	token = token[len(bearer):]
 
 	claims, err := parseJWTToken(token)
 	if err != nil {

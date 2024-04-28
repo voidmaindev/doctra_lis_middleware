@@ -3,6 +3,7 @@ package api
 
 import (
 	"errors"
+	"maps"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/voidmaindev/doctra_lis_middleware/log"
@@ -24,6 +25,9 @@ type API struct {
 	Devices      fiber.Router
 	LabDatas     fiber.Router
 }
+
+// ApiRV is API return value type
+type ApiRV fiber.Map
 
 // NewAPI creates a new API.
 func NewAPI(logger *log.Logger, router *fiber.App, store *store.Store) (*API, error) {
@@ -61,7 +65,7 @@ func getApiFromContext(c *fiber.Ctx) (*API, error) {
 }
 
 // apiResponse sends a response.
-func apiResponse(c *fiber.Ctx, status int, message string, data interface{}) error {
+func apiResponse(c *fiber.Ctx, status int, message string, data ApiRV) error {
 	success, msg := true, "success"
 	if status != fiber.StatusOK {
 		success = false
@@ -70,7 +74,7 @@ func apiResponse(c *fiber.Ctx, status int, message string, data interface{}) err
 
 	fm := fiber.Map{"success": success, "message": msg}
 	if data != nil {
-		fm = fiber.Map{"success": success, "message": msg, "data": data}
+		maps.Copy(fm, data)
 	}
 
 	return c.Status(status).JSON(fm)
@@ -82,8 +86,15 @@ func apiResponseError(c *fiber.Ctx, status int, message string) error {
 }
 
 // apiResponseData sends a data response.
-func apiResponseData(c *fiber.Ctx, status int, data interface{}) error {
+func apiResponseData(c *fiber.Ctx, status int, data ApiRV) error {
 	return apiResponse(c, status, "", data)
+}
+
+func NewAPIRV(k string, v interface{}) ApiRV {
+	rv := ApiRV{}
+	rv[k] = v
+
+	return rv
 }
 
 // addNoRoute adds a no route handler.

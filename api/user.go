@@ -20,23 +20,6 @@ func (api *API) initUserAPI() {
 	api.Users.Get("/", getUsers)
 }
 
-// getUsers gets all users.
-func getUsers(c *fiber.Ctx) error {
-	api, err := getApiFromContext(c)
-	if err != nil {
-		api.Logger.Err(err, "failed to get the api from context")
-		return apiResponseError(c, fiber.StatusInternalServerError, "failed to get the api from context")
-	}
-
-	users, err := api.Store.UserStore.GetAll()
-	if err != nil {
-		api.Logger.Err(err, "failed to get users")
-		return apiResponseError(c, fiber.StatusInternalServerError, "failed to get users")
-	}
-
-	return apiResponseData(c, fiber.StatusOK, users)
-}
-
 // registerUser registers a user.
 func registerUser(c *fiber.Ctx) error {
 	api, err := getApiFromContext(c)
@@ -64,7 +47,7 @@ func registerUser(c *fiber.Ctx) error {
 		return apiResponseError(c, fiber.StatusInternalServerError, "failed to create the user")
 	}
 
-	return apiResponseData(c, fiber.StatusOK, user.Username)
+	return apiResponseData(c, fiber.StatusOK, NewAPIRV("user", user.Username))
 }
 
 // token generates a JWT token.
@@ -97,5 +80,23 @@ func token(c *fiber.Ctx) error {
 		return apiResponseError(c, fiber.StatusInternalServerError, "failed to generate JWT token")
 	}
 
-	return apiResponseData(c, fiber.StatusOK, jwtToken)
+	return apiResponseData(c, fiber.StatusOK, NewAPIRV("token", jwtToken))
 }
+
+// getUsers gets all users.
+func getUsers(c *fiber.Ctx) error {
+	api, err := getApiFromContext(c)
+	if err != nil {
+		api.Logger.Err(err, "failed to get the api from context")
+		return apiResponseError(c, fiber.StatusInternalServerError, "failed to get the api from context")
+	}
+
+	users, err := api.Store.UserStore.GetAll()
+	if err != nil {
+		api.Logger.Err(err, "failed to get users")
+		return apiResponseError(c, fiber.StatusInternalServerError, "failed to get users")
+	}
+
+	return apiResponseData(c, fiber.StatusOK, NewAPIRV("users", users))
+}
+
