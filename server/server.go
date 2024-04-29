@@ -2,6 +2,8 @@
 package server
 
 import (
+	"os"
+
 	"github.com/voidmaindev/doctra_lis_middleware/app"
 	"github.com/voidmaindev/doctra_lis_middleware/log"
 )
@@ -29,8 +31,6 @@ func newServer(a app.App) (*Server, error) {
 
 // Start starts the server.
 func (s *Server) Start() error {
-	s.Log.Info("Starting server...")
-
 	s.App.SetLogger(s.Log)
 
 	err := s.App.InitApp()
@@ -50,10 +50,9 @@ func (s *Server) Start() error {
 
 // Stop stops the server.
 func (s *Server) Stop() {
-	// ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
-	// defer cancel()
-	// s.Shutdown(ctx)
-
-	// log.Println("Shutting down")
-	// os.Exit(0)
+	err := s.App.Stop()
+	if err != nil {
+		s.Log.Fatal("failed to stop the application")
+	}
+	os.Exit(0)
 }

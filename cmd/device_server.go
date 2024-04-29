@@ -12,12 +12,12 @@ var DeviceServerCommand = &cobra.Command{
 	Use:   "device",
 	Short: "Start the Doctra Middleware Device server",
 	Long:  "This command starts the Doctra Middleware Device server.",
-	RunE:   deviceServerCommand,
+	RunE:  deviceServerCommand,
 }
 
 // deviceServerCommand is the function that is called when the device command is executed.
 func deviceServerCommand(cmd *cobra.Command, args []string) error {
-	fmt.Println("Starting Device Server...")
+	fmt.Println("creating Device Server...")
 
 	srv, err := server.NewDeviceServer()
 	if err != nil {
@@ -26,9 +26,9 @@ func deviceServerCommand(cmd *cobra.Command, args []string) error {
 
 	err = srv.Start()
 	if err != nil {
-		srv.Log.Fatal("Failed to start the Device server")
+		srv.Log.Fatal("failed to start the Device server")
 	}
-	
+
 	defer srv.Stop()
 
 	waitForShutdown()

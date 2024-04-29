@@ -65,3 +65,9 @@ func (a *DeviceServerApplication) Start() error {
 	a.Log.Info("starting the device server")
 	return nil
 }
+
+// Stop stops the device server application.
+func (a *DeviceServerApplication) Stop() error {
+	a.Log.Info("stopping the device server")
+	return nil
+}

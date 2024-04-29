@@ -36,5 +36,5 @@ func waitForShutdown() {
 
 	<-interruptChan
 
-	fmt.Println("Shutting down...")
+	fmt.Println("shutting down...")
 }

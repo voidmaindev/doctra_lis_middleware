@@ -1,6 +1,9 @@
 package app
 
 import (
+	"context"
+	"time"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/voidmaindev/doctra_lis_middleware/api"
 	"github.com/voidmaindev/doctra_lis_middleware/config"
@@ -92,6 +95,8 @@ func (a *ApiServerApplication) setAPI() error {
 
 // Start starts the API server application.
 func (a *ApiServerApplication) Start() error {
+	a.Log.Info("starting the API server")
+
 	address := a.Config.Host + ":" + a.Config.Port
 
 	go func() {
@@ -100,6 +105,21 @@ func (a *ApiServerApplication) Start() error {
 			a.Log.Err(err, "failed to start the API server")
 		}
 	}()
+
+	return nil
+}
+
+// Stop stops the API server application.
+func (a *ApiServerApplication) Stop() error {
+	a.Log.Info("stopping the API server")
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*serverStopTimeout)
+	defer cancel()
+	err := a.Router.ShutdownWithContext(ctx)
+	if err != nil {
+		a.Log.Err(err, "failed to stop the API server")
+		return err
+	}
 
 	return nil
 }
