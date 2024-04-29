@@ -11,8 +11,8 @@ import (
 	"github.com/voidmaindev/doctra_lis_middleware/store"
 )
 
-// ApiServerApplication is the application for the API server.
-type ApiServerApplication struct {
+// APIServerApplication is the application for the API server.
+type APIServerApplication struct {
 	Log    *log.Logger
 	Config *config.ApiServerSettings
 	Router *fiber.App
@@ -21,12 +21,12 @@ type ApiServerApplication struct {
 }
 
 // SetLogger sets the logger for the API server application.
-func (a *ApiServerApplication) SetLogger(l *log.Logger) {
+func (a *APIServerApplication) SetLogger(l *log.Logger) {
 	a.Log = l
 }
 
 // InitApp initializes the API server application.
-func (a *ApiServerApplication) InitApp() error {
+func (a *APIServerApplication) InitApp() error {
 	err := a.setConfig()
 	if err != nil {
 		a.Log.Error("failed to set the API server config")
@@ -51,7 +51,7 @@ func (a *ApiServerApplication) InitApp() error {
 }
 
 // setConfig sets the configuration for the API server application.
-func (a *ApiServerApplication) setConfig() error {
+func (a *APIServerApplication) setConfig() error {
 	config, err := config.ReadApiServerConfig()
 	if err != nil {
 		a.Log.Err(err, "failed to read the API server config")
@@ -63,12 +63,12 @@ func (a *ApiServerApplication) setConfig() error {
 }
 
 // setRouter sets the router for the API server application.
-func (a *ApiServerApplication) setRouter() {
+func (a *APIServerApplication) setRouter() {
 	a.Router = api.NewRouter(a.Log.Logger)
 }
 
 // setStore sets the store for the API server application.
-func (a *ApiServerApplication) setStore() error {
+func (a *APIServerApplication) setStore() error {
 	store, err := store.NewStore(a.Log)
 	if err != nil {
 		a.Log.Error("failed to create a new store")
@@ -81,7 +81,7 @@ func (a *ApiServerApplication) setStore() error {
 }
 
 // setAPI sets the API for the API server application.
-func (a *ApiServerApplication) setAPI() error {
+func (a *APIServerApplication) setAPI() error {
 	api, err := api.NewAPI(a.Log, a.Router, a.Store)
 	if err != nil {
 		a.Log.Error("failed to create a new API")
@@ -94,7 +94,7 @@ func (a *ApiServerApplication) setAPI() error {
 }
 
 // Start starts the API server application.
-func (a *ApiServerApplication) Start() error {
+func (a *APIServerApplication) Start() error {
 	a.Log.Info("starting the API server")
 
 	address := a.Config.Host + ":" + a.Config.Port
@@ -110,7 +110,7 @@ func (a *ApiServerApplication) Start() error {
 }
 
 // Stop stops the API server application.
-func (a *ApiServerApplication) Stop() error {
+func (a *APIServerApplication) Stop() error {
 	a.Log.Info("stopping the API server")
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*serverStopTimeout)
