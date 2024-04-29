@@ -96,12 +96,3 @@ func isAdmin(c *fiber.Ctx) bool {
 	return role == model.RoleAdmin
 }
 
-// isUser is a middleware to check if the user is a user.
-func isUser(c *fiber.Ctx) bool {
-	role, ok := c.Locals("role").(string)
-	if !ok {
-		return false
-	}
-
-	return role == model.RoleUser
-}
