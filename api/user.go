@@ -33,19 +33,21 @@ func registerUser(c *fiber.Ctx) error {
 		return apiResponseError(c, fiber.StatusInternalServerError, "failed to get the app from context")
 	}
 
-	user := &model.User{}
-	if err := c.BodyParser(user); err != nil {
+	authUser := &model.AuthUser{}
+	if err := c.BodyParser(authUser); err != nil {
 		api.Logger.Err(err, "failed to parse the request body")
 		return apiResponseError(c, fiber.StatusBadRequest, "failed to parse the request body")
 	}
 
-	user.SetDefaultRole()
-
-	err = user.HashPassword()
+	err = authUser.HashPassword()
 	if err != nil {
 		api.Logger.Err(err, "failed to hash the password")
 		return apiResponseError(c, fiber.StatusInternalServerError, "failed to hash the password")
 	}
+
+	user := model.NewUserFromAuthUser(authUser)
+
+	user.SetDefaultRole()
 
 	if err := api.Store.UserStore.Create(user); err != nil {
 		api.Logger.Err(err, "failed to create the user")
@@ -63,7 +65,7 @@ func token(c *fiber.Ctx) error {
 		return apiResponseError(c, fiber.StatusInternalServerError, "failed to get the app from context")
 	}
 
-	credentials := &authUser{}
+	credentials := &model.AuthUser{}
 	if err := c.BodyParser(credentials); err != nil {
 		api.Logger.Err(err, "failed to parse the request body")
 		return apiResponseError(c, fiber.StatusBadRequest, "failed to parse the request body")
@@ -220,18 +222,21 @@ func updateUser(c *fiber.Ctx) error {
 		return apiResponseError(c, fiber.StatusNotFound, "user not found")
 	}
 
-	if err := c.BodyParser(user); err != nil {
+	authUser := &model.AuthUser{}
+	if err := c.BodyParser(authUser); err != nil {
 		api.Logger.Err(err, "failed to parse the request body")
 		return apiResponseError(c, fiber.StatusBadRequest, "failed to parse the request body")
 	}
 
-	user.SetDefaultRole()
-
-	err = user.HashPassword()
+	err = authUser.HashPassword()
 	if err != nil {
 		api.Logger.Err(err, "failed to hash the password")
 		return apiResponseError(c, fiber.StatusInternalServerError, "failed to hash the password")
 	}
+
+	user.UpdateFromAuthUser(authUser)
+
+	user.SetDefaultRole()
 
 	if err := api.Store.UserStore.Update(user); err != nil {
 		api.Logger.Err(err, "failed to update the user")

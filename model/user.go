@@ -18,25 +18,48 @@ const defaultHashCost = 10
 type User struct {
 	gorm.Model
 	Username string `json:"username" gorm:"not null;unique;index"`
-	Password string `json:"-" gorm:"not null"`
+	Password []byte `json:"-" gorm:"not null"`
 	Role     string `json:"role,omitempty" gorm:"not null;index"`
 }
 
+// AuthUser represents an authentication user.
+type AuthUser struct {
+	Username       string `json:"username"`
+	Password       string `json:"password"`
+	Role           string `json:"role,omitempty"`
+	HashedPassword []byte `json:"-"`
+}
+
+func NewUserFromAuthUser(authUser *AuthUser) *User {
+	return &User{
+		Username: authUser.Username,
+		Password: authUser.HashedPassword,
+		Role:     authUser.Role,
+	}
+}
+
+// UpdateFromAuthUser updates the user from the authentication user.
+func (u *User) UpdateFromAuthUser(authUser *AuthUser) {
+	u.Username = authUser.Username
+	u.Password = authUser.HashedPassword
+	u.Role = authUser.Role
+}
+
 // HashPassword hashes the password.
-func (u *User) HashPassword() error {
+func (u *AuthUser) HashPassword() error {
 	hash, err := bcrypt.GenerateFromPassword([]byte(u.Password), defaultHashCost)
 	if err != nil {
 		return err
 	}
 
-	u.Password = string(hash)
+	u.HashedPassword = hash
 
 	return nil
 }
 
 // CheckPassword checks the password.
 func (u *User) CheckPassword(password string) bool {
-	err := bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(password))
+	err := bcrypt.CompareHashAndPassword(u.Password, []byte(password))
 	return err == nil
 }
 

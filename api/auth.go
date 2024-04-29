@@ -14,12 +14,6 @@ const (
 	bearer    = "bearer "
 )
 
-// authUser is the structure for the authentication user.
-type authUser struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
-}
-
 // jwtCustomClaims is the custom claims for the JWT token.
 type jwtCustomClaims struct {
 	Username string `json:"username"`
