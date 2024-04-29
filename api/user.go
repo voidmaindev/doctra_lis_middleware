@@ -54,7 +54,7 @@ func registerUser(c *fiber.Ctx) error {
 		return apiResponseError(c, fiber.StatusInternalServerError, "failed to create the user")
 	}
 
-	return apiResponseData(c, fiber.StatusOK, NewAPIRV("user", user.Username))
+	return apiResponseData(c, fiber.StatusOK, NewAPIRV("username", user.Username))
 }
 
 // token generates a JWT token.
@@ -243,7 +243,7 @@ func updateUser(c *fiber.Ctx) error {
 		return apiResponseError(c, fiber.StatusInternalServerError, "failed to update the user")
 	}
 
-	return apiResponseData(c, fiber.StatusOK, NewAPIRV("user", user.Username))
+	return apiResponseData(c, fiber.StatusOK, NewAPIRV("username", user.Username))
 }
 
 // deleteUser deletes a user.
@@ -279,5 +279,5 @@ func deleteUser(c *fiber.Ctx) error {
 		return apiResponseError(c, fiber.StatusInternalServerError, "failed to delete the user")
 	}
 
-	return apiResponseData(c, fiber.StatusOK, NewAPIRV("user", user.Username))
+	return apiResponseData(c, fiber.StatusOK, NewAPIRV("username", user.Username))
 }

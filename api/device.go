@@ -35,7 +35,7 @@ func getDevices(c *fiber.Ctx) error {
 		return apiResponseError(c, fiber.StatusInternalServerError, "failed to get devices")
 	}
 
-	return apiResponseData(c, fiber.StatusOK, NewAPIRV("id", devices))
+	return apiResponseData(c, fiber.StatusOK, NewAPIRV("devices", devices))
 }
 
 // getDevice gets a device by ID.
@@ -58,7 +58,7 @@ func getDevice(c *fiber.Ctx) error {
 		return apiResponseError(c, fiber.StatusInternalServerError, "failed to get the device")
 	}
 
-	return apiResponseData(c, fiber.StatusOK, NewAPIRV("id", device))
+	return apiResponseData(c, fiber.StatusOK, NewAPIRV("device", device))
 }
 
 // createDevice creates a new device.

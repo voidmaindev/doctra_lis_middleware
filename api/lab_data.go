@@ -32,13 +32,13 @@ func getLabDatas(c *fiber.Ctx) error {
 		return apiResponseError(c, fiber.StatusInternalServerError, "failed to get the app from context")
 	}
 
-	labDatas, err := api.Store.LabDataStore.GetAll()
+	labData, err := api.Store.LabDataStore.GetAll()
 	if err != nil {
 		api.Logger.Err(err, "failed to get lab datas")
 		return apiResponseError(c, fiber.StatusInternalServerError, "failed to get lab datas")
 	}
 
-	return apiResponseData(c, fiber.StatusOK, NewAPIRV("lab_data", labDatas))
+	return apiResponseData(c, fiber.StatusOK, NewAPIRV("lab_data", labData))
 }
 
 // getLabData gets a lab data by ID.
