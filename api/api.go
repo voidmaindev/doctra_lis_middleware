@@ -26,7 +26,7 @@ type API struct {
 	LabDatas     fiber.Router
 }
 
-// ApiRV is API return value type
+// ApiRV is the API response value.
 type ApiRV fiber.Map
 
 // NewAPI creates a new API.
@@ -90,6 +90,7 @@ func apiResponseData(c *fiber.Ctx, status int, data ApiRV) error {
 	return apiResponse(c, status, "", data)
 }
 
+// NewAPIRV creates a new API response value.
 func NewAPIRV(k string, v interface{}) ApiRV {
 	rv := ApiRV{}
 	rv[k] = v
