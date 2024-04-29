@@ -66,7 +66,8 @@ func (a *DeviceServerApplication) setConfig() error {
 
 // setListener sets the listener for the device server application.
 func (a *DeviceServerApplication) setListener() error {
-	listener, err := net.Listen("tcp", a.Config.Port)
+	address := a.Config.Host + ":" + a.Config.Port
+	listener, err := net.Listen("tcp", address)
 	if err != nil {
 		a.Log.Err(err, "failed to start the TCP listener")
 		return err
@@ -102,16 +103,8 @@ func (a *DeviceServerApplication) setTCP() error {
 func (a *DeviceServerApplication) Start() error {
 	a.Log.Info("starting the device server")
 
-	go a.TCP.Accept()
-
-	for msg := range a.TCP.RcvChannel {
-		if a.TCP.Conns[msg.ConnString] == nil {
-			continue
-		}
-
-		a.Log.Info("received a message from " + msg.ConnString)
-		a.Log.Info(string(msg.Data))
-	}
+	go a.TCP.AcceptConnections()
+	go a.TCP.ManageMessages()
 
 	return nil
 }

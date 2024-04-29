@@ -1,6 +1,7 @@
 package tcp
 
 import (
+	"fmt"
 	"net"
 
 	"github.com/voidmaindev/doctra_lis_middleware/log"
@@ -30,17 +31,18 @@ func NewTCP(log *log.Logger, listener net.Listener) *TCP {
 		Listener: listener,
 	}
 
+	tcp.Conns = map[string]net.Conn{}
 	tcp.RcvChannel = make(chan RcvData)
 
 	return tcp
 }
 
 // Accept accepts a connection.
-func (t *TCP) Accept() {
+func (t *TCP) AcceptConnections() {
 	for {
 		conn, err := t.Listener.Accept()
 		if err != nil {
-			if err == net.ErrClosed {
+			if err == net.ErrClosed || err.Error() == "EOF" {
 				t.Log.Info("TCP listener closed")
 				return
 			}
@@ -52,7 +54,7 @@ func (t *TCP) Accept() {
 		t.Log.Info("accepted a connection from " + connString)
 		t.Conns[connString] = conn
 
-		t.ReadMessages(conn)
+		go t.ReadMessages(conn)
 	}
 }
 
@@ -66,8 +68,8 @@ func (t *TCP) ReadMessages(conn net.Conn) {
 		buf := make([]byte, hl7BufferSize)
 		n, err := conn.Read(buf)
 		if err != nil {
-			if err == net.ErrClosed {
-				t.Log.Info("connection closed")
+			if err == net.ErrClosed || err.Error() == "EOF" {
+				t.Log.Info(fmt.Sprintf("connection from %s closed", connString))
 				return
 			}
 
@@ -82,4 +84,15 @@ func (t *TCP) ReadMessages(conn net.Conn) {
 // Close closes the connection.
 func getConnString(conn net.Conn) string {
 	return conn.RemoteAddr().String()
+}
+
+func (t *TCP) ManageMessages() {
+	for msg := range t.RcvChannel {
+		if t.Conns[msg.ConnString] == nil {
+			continue
+		}
+
+		t.Log.Info("received a message from " + msg.ConnString)
+		t.Log.Info(string(msg.Data))
+	}
 }

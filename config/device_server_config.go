@@ -5,6 +5,7 @@ const deviceServerConfigFile = "config/device_server_config.json"
 
 // DeviceServerSettings is the struct that holds the log settings
 type DeviceServerSettings struct {
+	Host       string
 	Port       string
 	DBSettings *DBSettings
 }
