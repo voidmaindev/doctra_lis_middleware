@@ -6,13 +6,15 @@ import (
 	"gorm.io/gorm"
 )
 
-// LabData represents a lab data.
+// LabData represents a lab data received from the device
 type LabData struct {
 	gorm.Model
+	RawDataID     uint      `json:"raw_data_id" gorm:"not null;index"`
 	DeviceID      uint      `json:"device_id" gorm:"not null;index"`
 	Barcode       string    `json:"barcode" gorm:"not null;index"`
 	Param         string    `json:"param" gorm:"not null"`
 	Result        float64   `json:"result" gorm:"not null"`
+	Index         uint      `json:"index" gorm:"not null"`
 	Unit          string    `json:"unit" gorm:"not null"`
 	CompletedDate time.Time `json:"completed_date" gorm:"type:datetime;not null"`
 }

@@ -83,7 +83,8 @@ func (t *TCP) ReadMessages(conn net.Conn) {
 
 // Close closes the connection.
 func getConnString(conn net.Conn) string {
-	return conn.RemoteAddr().String()
+	ip := conn.RemoteAddr().(*net.TCPAddr).IP.String()
+	return ip
 }
 
 func (t *TCP) ManageMessages() {
