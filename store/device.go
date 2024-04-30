@@ -81,7 +81,7 @@ func (s *DeviceStore) GetByModelID(modelID uint) ([]model.Device, error) {
 // GetAll gets all devices.
 func (s *DeviceStore) GetAll() ([]model.Device, error) {
 	devices := []model.Device{}
-	err := s.db.Find(&devices).Error
+	err := s.db.Preload("DeviceModel").Find(&devices).Error
 	if err != nil {
 		return nil, errors.New("failed to get all devices")
 	}
