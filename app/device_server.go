@@ -5,6 +5,7 @@ import (
 
 	"github.com/voidmaindev/doctra_lis_middleware/config"
 	"github.com/voidmaindev/doctra_lis_middleware/log"
+	"github.com/voidmaindev/doctra_lis_middleware/model"
 	"github.com/voidmaindev/doctra_lis_middleware/store"
 	"github.com/voidmaindev/doctra_lis_middleware/tcp"
 )
@@ -104,7 +105,7 @@ func (a *DeviceServerApplication) Start() error {
 	a.Log.Info("starting the device server")
 
 	go a.TCP.AcceptConnections()
-	go a.TCP.ManageMessages()
+	go a.ManageMessages()
 
 	return nil
 }
@@ -122,4 +123,33 @@ func (a *DeviceServerApplication) Stop() error {
 	close(a.TCP.RcvChannel)
 
 	return nil
+}
+
+func (a *DeviceServerApplication) ManageMessages() {
+	for msg := range a.TCP.RcvChannel {
+		if a.TCP.Conns[msg.ConnString] == nil {
+			continue
+		}
+
+		a.Log.Info("received a message from " + msg.ConnString)
+		a.Log.Info(string(msg.Data))
+
+		device, err := a.Store.DeviceStore.GetByNetAddress(msg.ConnString)
+		if err != nil {
+			a.Log.Error("failed to get a device by network address: " + msg.ConnString)
+			continue
+		}
+
+		rawData := model.RawData{
+			ConnString: msg.ConnString,
+			DeviceID:   device.ID,
+			Data:       msg.Data,
+		}
+
+		err = a.Store.RawDataStore.Create(&rawData)
+		if err != nil {
+			a.Log.Error("failed to create a raw data from " + device.Name)
+			continue
+		}
+	}
 }

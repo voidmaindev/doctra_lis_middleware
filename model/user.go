@@ -17,7 +17,7 @@ const defaultHashCost = 10
 // User represents a user.
 type User struct {
 	gorm.Model
-	Username string `json:"username" gorm:"not null;unique;index"`
+	Username string `json:"username" gorm:"not null;index"`
 	Password []byte `json:"-" gorm:"not null"`
 	Role     string `json:"role,omitempty" gorm:"not null;index"`
 }

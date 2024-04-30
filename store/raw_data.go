@@ -55,7 +55,7 @@ func (s *RawDataStore) GetAll() ([]*model.RawData, error) {
 
 	return rawData, nil
 }
-	
+
 // Update updates a raw data.
 func (s *RawDataStore) Update(rawData *model.RawData) error {
 	err := s.db.Save(rawData).Error

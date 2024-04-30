@@ -5,6 +5,6 @@ import "gorm.io/gorm"
 // DeviceModel represents a device model.
 type DeviceModel struct {
 	gorm.Model
-	Name   string `json:"name" gorm:"not null;unique"`
+	Name   string `json:"name" gorm:"not null"`
 	Driver string `json:"driver" gorm:"not null"`
 }

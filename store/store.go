@@ -14,6 +14,7 @@ type Store struct {
 	DeviceModelStore *DeviceModelStore
 	DeviceStore      *DeviceStore
 	LabDataStore     *LabDataStore
+	RawDataStore		 *RawDataStore
 }
 
 // NewStore creates a new Store.
@@ -55,12 +56,19 @@ func NewStore(log *log.Logger) (*Store, error) {
 		return nil, err
 	}
 
+	rawDataStore, err := NewRawDataStore(db)
+	if err != nil {
+		log.Err(err, "failed to create RawDataStore")
+		return nil, err
+	}
+
 	store := &Store{
 		db:               db,
 		UserStore:        userStore,
 		DeviceModelStore: deviceModelStore,
 		DeviceStore:      deviceStore,
 		LabDataStore:     labDataStore,
+		RawDataStore:     rawDataStore,
 	}
 
 	return store, nil

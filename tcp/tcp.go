@@ -87,13 +87,3 @@ func getConnString(conn net.Conn) string {
 	return ip
 }
 
-func (t *TCP) ManageMessages() {
-	for msg := range t.RcvChannel {
-		if t.Conns[msg.ConnString] == nil {
-			continue
-		}
-
-		t.Log.Info("received a message from " + msg.ConnString)
-		t.Log.Info(string(msg.Data))
-	}
-}

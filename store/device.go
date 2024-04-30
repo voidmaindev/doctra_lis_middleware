@@ -57,9 +57,9 @@ func (s *DeviceStore) GetBySerial(serial string) (*model.Device, error) {
 }
 
 // GetByNetworkAddress gets a device by network address.
-func (s *DeviceStore) GetByNetworkAddress(networkAddress string) (*model.Device, error) {
+func (s *DeviceStore) GetByNetAddress(networkAddress string) (*model.Device, error) {
 	device := &model.Device{}
-	err := s.db.Where("network_address = ?", networkAddress).First(device).Error
+	err := s.db.Where("net_address = ?", networkAddress).First(device).Error
 	if err != nil {
 		return nil, fmt.Errorf("failed to get device by network address: %v", networkAddress)
 	}
