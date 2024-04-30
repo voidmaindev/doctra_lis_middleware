@@ -39,13 +39,11 @@ func registerUser(c *fiber.Ctx) error {
 		return apiResponseError(c, fiber.StatusBadRequest, "failed to parse the request body")
 	}
 
-	err = authUser.HashPassword()
+	user, err := model.NewUserFromAuthUser(authUser)
 	if err != nil {
-		api.Logger.Err(err, "failed to hash the password")
-		return apiResponseError(c, fiber.StatusInternalServerError, "failed to hash the password")
+		api.Logger.Err(err, "failed to create a new user from the auth user")
+		return apiResponseError(c, fiber.StatusInternalServerError, "failed to create a new user from the auth user")
 	}
-
-	user := model.NewUserFromAuthUser(authUser)
 
 	user.SetDefaultRole()
 
@@ -228,13 +226,11 @@ func updateUser(c *fiber.Ctx) error {
 		return apiResponseError(c, fiber.StatusBadRequest, "failed to parse the request body")
 	}
 
-	err = authUser.HashPassword()
+	err = user.UpdateFromAuthUser(authUser)
 	if err != nil {
-		api.Logger.Err(err, "failed to hash the password")
-		return apiResponseError(c, fiber.StatusInternalServerError, "failed to hash the password")
+		api.Logger.Err(err, "failed to update the user from the auth user")
+		return apiResponseError(c, fiber.StatusInternalServerError, "failed to update the user from the auth user")
 	}
-
-	user.UpdateFromAuthUser(authUser)
 
 	user.SetDefaultRole()
 

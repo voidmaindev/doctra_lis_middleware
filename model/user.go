@@ -30,19 +30,33 @@ type AuthUser struct {
 	HashedPassword []byte `json:"-"`
 }
 
-func NewUserFromAuthUser(authUser *AuthUser) *User {
-	return &User{
+func NewUserFromAuthUser(authUser *AuthUser) (*User, error) {
+	err := authUser.HashPassword()
+	if err != nil {
+		return nil, err
+	}
+
+	user := &User{
 		Username: authUser.Username,
 		Password: authUser.HashedPassword,
 		Role:     authUser.Role,
 	}
+
+	return user, nil
 }
 
 // UpdateFromAuthUser updates the user from the authentication user.
-func (u *User) UpdateFromAuthUser(authUser *AuthUser) {
+func (u *User) UpdateFromAuthUser(authUser *AuthUser) error {
+	err := authUser.HashPassword()
+	if err != nil {
+		return err
+	}
+
 	u.Username = authUser.Username
 	u.Password = authUser.HashedPassword
 	u.Role = authUser.Role
+
+	return nil
 }
 
 // HashPassword hashes the password.

@@ -8,6 +8,7 @@ import (
 	"github.com/voidmaindev/doctra_lis_middleware/api"
 	"github.com/voidmaindev/doctra_lis_middleware/config"
 	"github.com/voidmaindev/doctra_lis_middleware/log"
+	"github.com/voidmaindev/doctra_lis_middleware/model"
 	"github.com/voidmaindev/doctra_lis_middleware/store"
 )
 
@@ -38,6 +39,12 @@ func (a *APIServerApplication) InitApp() error {
 	err = a.setStore()
 	if err != nil {
 		a.Log.Error("failed to set a store")
+		return err
+	}
+
+	err = a.CreateDefAdmin()
+	if err != nil {
+		a.Log.Error("failed to create the default admin user")
 		return err
 	}
 
@@ -89,6 +96,40 @@ func (a *APIServerApplication) setAPI() error {
 	}
 
 	a.API = api
+
+	return nil
+}
+
+// CreateDefAdmin creates the default admin user.
+func (a *APIServerApplication) CreateDefAdmin() error {
+	if !a.Config.DBSettings.CreateDefAdmin {
+		return nil
+	}
+
+	admin, err := a.Store.UserStore.GetByUsername("admin")
+	if err == nil && admin != nil {
+		return nil
+	}
+
+	a.Log.Info("creating the default admin user")
+
+	authUser := &model.AuthUser{
+		Username: "admin",
+		Password: "Ab123456",
+		Role:     "admin",
+	}
+
+	user, err := model.NewUserFromAuthUser(authUser)
+	if err != nil {
+		a.Log.Err(err, "failed to create a new user from the auth user")
+		return err
+	}
+
+	err = a.Store.UserStore.Create(user)
+	if err != nil {
+		a.Log.Error("failed to create the default admin user")
+		return err
+	}
 
 	return nil
 }
