@@ -36,7 +36,12 @@ func getRawDatas(c *fiber.Ctx) error {
 		return apiResponseError(c, fiber.StatusInternalServerError, "failed to get raw datas")
 	}
 
-	return apiResponseData(c, fiber.StatusOK, NewAPIRV("raw_data", rawData))
+	rawDataAPIs := make([]*model.RawDataApi, 0, len(rawData))
+	for _, r := range rawData {
+		rawDataAPIs = append(rawDataAPIs, model.NewRawDataApi(r))
+	}
+
+	return apiResponseData(c, fiber.StatusOK, NewAPIRV("raw_data", rawDataAPIs))
 }
 
 // getRawData gets a raw data by ID.
@@ -59,7 +64,9 @@ func getRawData(c *fiber.Ctx) error {
 		return apiResponseError(c, fiber.StatusInternalServerError, "failed to get the raw data")
 	}
 
-	return apiResponseData(c, fiber.StatusOK, NewAPIRV("raw_data", rawData))
+	rawDataAPI := model.NewRawDataApi(rawData)
+
+	return apiResponseData(c, fiber.StatusOK, NewAPIRV("raw_data", rawDataAPI))
 }
 
 // getRawDataByDeviceID gets a raw data by device ID.
@@ -82,7 +89,12 @@ func getRawDataByDeviceID(c *fiber.Ctx) error {
 		return apiResponseError(c, fiber.StatusInternalServerError, "failed to get the raw data by device ID")
 	}
 
-	return apiResponseData(c, fiber.StatusOK, NewAPIRV("raw_data", rawData))
+	rawDataAPIs := make([]*model.RawDataApi, 0, len(rawData))
+	for _, r := range rawData {
+		rawDataAPIs = append(rawDataAPIs, model.NewRawDataApi(r))
+	}
+
+	return apiResponseData(c, fiber.StatusOK, NewAPIRV("raw_data", rawDataAPIs))
 }
 
 // createRawData creates a raw data.
