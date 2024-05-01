@@ -10,18 +10,18 @@ const labDataAPIPath = "/lab_data"
 
 // initLabDataAPI initializes the lab data API.
 func (api *API) initLabDataAPI() {
-	api.LabDatas = api.APIRoot.Group(labDataAPIPath)
+	api.LabData = api.APIRoot.Group(labDataAPIPath)
 
-	api.LabDatas.Use(isAuthorized)
+	api.LabData.Use(isAuthorized)
 
-	api.LabDatas.Get("/", getLabDatas)
-	api.LabDatas.Get("/:id", getLabData)
-	api.LabDatas.Get("/barcode/:barcode", getLabDataByBarcode)
-	api.LabDatas.Get("/device/:device_id", getLabDataByDeviceID)
-	api.LabDatas.Get("/device/:device_id/barcode/:barcode", getLabDataByDeviceIDAndBarcode)
-	api.LabDatas.Post("/", createLabData)
-	api.LabDatas.Put("/:id", updateLabData)
-	api.LabDatas.Delete("/:id", deleteLabData)
+	api.LabData.Get("/", getLabDatas)
+	api.LabData.Get("/:id", getLabData)
+	api.LabData.Get("/barcode/:barcode", getLabDataByBarcode)
+	api.LabData.Get("/device/:device_id", getLabDataByDeviceID)
+	api.LabData.Get("/device/:device_id/barcode/:barcode", getLabDataByDeviceIDAndBarcode)
+	api.LabData.Post("/", createLabData)
+	api.LabData.Put("/:id", updateLabData)
+	api.LabData.Delete("/:id", deleteLabData)
 }
 
 // getLabDatas gets all lab datas.

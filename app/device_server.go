@@ -151,5 +151,7 @@ func (a *DeviceServerApplication) ManageMessages() {
 			a.Log.Error("failed to create a raw data from " + device.Name)
 			continue
 		}
+
+		
 	}
 }

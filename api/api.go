@@ -23,7 +23,8 @@ type API struct {
 	Users        fiber.Router
 	DeviceModels fiber.Router
 	Devices      fiber.Router
-	LabDatas     fiber.Router
+	LabData      fiber.Router
+	RawData      fiber.Router
 }
 
 // ApiRV is the API response value.
@@ -48,6 +49,7 @@ func NewAPI(logger *log.Logger, router *fiber.App, store *store.Store) (*API, er
 	api.initDeviceModelAPI()
 	api.initDeviceAPI()
 	api.initLabDataAPI()
+	api.initRawDataAPI()
 
 	api.addNoRoute()
 

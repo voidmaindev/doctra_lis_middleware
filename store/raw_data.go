@@ -56,6 +56,17 @@ func (s *RawDataStore) GetAll() ([]*model.RawData, error) {
 	return rawData, nil
 }
 
+// GetByDeviceID gets a raw data by device ID.
+func (s *RawDataStore) GetByDeviceID(deviceID uint) ([]*model.RawData, error) {
+	rawData := []*model.RawData{}
+	err := s.db.Where("device_id = ?", deviceID).Find(&rawData).Error
+	if err != nil {
+		return nil, fmt.Errorf("failed to get raw data by device ID: %v", deviceID)
+	}
+
+	return rawData, nil
+}
+
 // Update updates a raw data.
 func (s *RawDataStore) Update(rawData *model.RawData) error {
 	err := s.db.Save(rawData).Error
