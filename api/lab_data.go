@@ -19,6 +19,8 @@ func (api *API) initLabDataAPI() {
 	api.LabData.Get("/barcode/:barcode", getLabDataByBarcode)
 	api.LabData.Get("/device/:device_id", getLabDataByDeviceID)
 	api.LabData.Get("/device/:device_id/barcode/:barcode", getLabDataByDeviceIDAndBarcode)
+	api.LabData.Get("/serial/:serial", getLabDataBySerial)
+	api.LabData.Get("/serial/:serial/barcode/:barcode", getLabDataBySerialAndBarcode)
 	api.LabData.Post("/", createLabData)
 	api.LabData.Put("/:id", updateLabData)
 	api.LabData.Delete("/:id", deleteLabData)
@@ -124,6 +126,43 @@ func getLabDataByDeviceIDAndBarcode(c *fiber.Ctx) error {
 	if err != nil {
 		api.Logger.Err(err, "failed to get the lab data by device ID and barcode")
 		return apiResponseError(c, fiber.StatusInternalServerError, "failed to get the lab data by device ID and barcode")
+	}
+
+	return apiResponseData(c, fiber.StatusOK, NewAPIRV("lab_data", labData))
+}
+
+// getLabDataBySerial gets a lab data by serial.
+func getLabDataBySerial(c *fiber.Ctx) error {
+	api, err := getApiFromContext(c)
+	if err != nil {
+		api.Logger.Err(err, "failed to get the app from context")
+		return apiResponseError(c, fiber.StatusInternalServerError, "failed to get the app from context")
+	}
+
+	serial := c.Params("serial")
+	labData, err := api.Store.LabDataStore.GetBySerial(serial)
+	if err != nil {
+		api.Logger.Err(err, "failed to get the lab data by serial")
+		return apiResponseError(c, fiber.StatusInternalServerError, "failed to get the lab data by serial")
+	}
+
+	return apiResponseData(c, fiber.StatusOK, NewAPIRV("lab_data", labData))
+}
+
+// getLabDataBySerialAndBarcode gets a lab data by serial and barcode.
+func getLabDataBySerialAndBarcode(c *fiber.Ctx) error {
+	api, err := getApiFromContext(c)
+	if err != nil {
+		api.Logger.Err(err, "failed to get the app from context")
+		return apiResponseError(c, fiber.StatusInternalServerError, "failed to get the app from context")
+	}
+
+	serial := c.Params("serial")
+	barcode := c.Params("barcode")
+	labData, err := api.Store.LabDataStore.GetBySerialAndBarcode(serial, barcode)
+	if err != nil {
+		api.Logger.Err(err, "failed to get the lab data by serial and barcode")
+		return apiResponseError(c, fiber.StatusInternalServerError, "failed to get the lab data by serial and barcode")
 	}
 
 	return apiResponseData(c, fiber.StatusOK, NewAPIRV("lab_data", labData))

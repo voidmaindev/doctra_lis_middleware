@@ -3,6 +3,7 @@ package driver
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/voidmaindev/doctra_lis_middleware/log"
 	"github.com/voidmaindev/doctra_lis_middleware/model"
@@ -65,6 +66,16 @@ func (d *Driver_hl7_231) ProcessDeviceMessage(deviceMsg []byte, conn *tcp.ConnDa
 			d.log.Error("failed to unmarshal a raw data from " + device.Name)
 			rd.Processed = false
 		}
+		for _, labData := range labDatas {
+			labData.RawDataID = rd.ID
+			labData.DeviceID = device.ID
+
+			err = d.store.LabDataStore.Create(labData)
+			if err != nil {
+				d.log.Error(fmt.Sprintf("failed to create a lab data from %s with barcode %s and index %d", device.Name, labData.Barcode, labData.Index))
+				continue
+			}
+		}
 
 		err = d.store.RawDataStore.Create(rd)
 		if err != nil {
@@ -111,11 +122,27 @@ func (d *Driver_hl7_231) getRawDatas(msg string, prevRawData *string) []string {
 func (d *Driver_hl7_231) unmarshalRawData(rawData string) ([]*model.LabData, error) {
 	labDatas := []*model.LabData{}
 
-	// // hl7msg, err := parseHL7Message(rawData)
-	// if err != nil {
-	// 	d.log.Error("failed to parse HL7 message")
-	// 	return labDatas, err
-	// }
+	hl7msg, err := parseHL7Message(rawData)
+	if err != nil {
+		d.log.Error("failed to parse HL7 message")
+		return labDatas, err
+	}
+
+	for _, obr := range hl7msg.Segments["OBR"] {
+		for _, obx := range hl7msg.Segments["OBX"] {
+			if obr["Set ID - OBR"] == obx["Set ID - OBX"] {
+				labData := &model.LabData{
+					Barcode:       obr["Placer Order Number"].(string),
+					Index:         uint(obr["Set ID - OBR"].(int)),
+					Param:         obx["Observation Identifier"].(map[string]interface{})["Type"].(string),
+					Result:        obx["Observation Value"].(map[string]interface{})["Data"].(string),
+					Unit:          obx["Units"].(string),
+					CompletedDate: obx["Date/Time of the Observation"].(time.Time),
+				}
+				labDatas = append(labDatas, labData)
+			}
+		}
+	}
 
 	return labDatas, nil
 }
