@@ -34,6 +34,30 @@ func (s *LabDataStore) Create(labData *model.LabData) error {
 	return nil
 }
 
+// CreateOrUpdate creates or updates a lab data.
+func (s *LabDataStore) CreateOrUpdate(labData *model.LabData) error {
+	labDataOld, err := s.GetByDeviceIDAndBarcodeAndParam(labData.DeviceID, labData.Barcode, labData.Param)
+	if err != nil {
+		labDataOld.Result = labData.Result
+		labDataOld.Unit = labData.Unit
+		labDataOld.CompletedDate = labData.CompletedDate
+
+		errUpd := s.Update(labDataOld)
+		if errUpd != nil {
+			return fmt.Errorf("failed to update lab data for device: %v and barcode: %v", labData.DeviceID, labData.Barcode)
+		}
+
+		return nil
+	}
+
+	err = s.db.Save(labData).Error
+	if err != nil {
+		return fmt.Errorf("failed to create or update lab data for device: %v and barcode: %v", labData.DeviceID, labData.Barcode)
+	}
+
+	return nil
+}
+
 // GetByID gets a lab data by ID.
 func (s *LabDataStore) GetByID(id uint) (*model.LabData, error) {
 	labData := &model.LabData{}
@@ -73,6 +97,17 @@ func (s *LabDataStore) GetByDeviceIDAndBarcode(deviceID uint, barcode string) ([
 	err := s.db.Preload("Device").Where("device_id = ? AND barcode = ?", deviceID, barcode).Find(&labData).Order("ID").Error
 	if err != nil {
 		return nil, fmt.Errorf("failed to get lab data by device ID: %v and barcode: %v", deviceID, barcode)
+	}
+
+	return labData, nil
+}
+
+// GetByDeviceIDAndBarcodeAndParam gets a lab data by device ID, barcode and param.
+func (s *LabDataStore) GetByDeviceIDAndBarcodeAndParam(deviceID uint, barcode, param string) (*model.LabData, error) {
+	labData := &model.LabData{}
+	err := s.db.Preload("Device").Where("device_id = ? AND barcode = ? AND param = ?", deviceID, barcode, param).First(labData).Error
+	if err != nil {
+		return nil, fmt.Errorf("failed to get lab data by device ID: %v, barcode: %v and param: %v", deviceID, barcode, param)
 	}
 
 	return labData, nil

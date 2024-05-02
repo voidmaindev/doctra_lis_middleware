@@ -66,13 +66,15 @@ func (d *Driver_hl7_231) ProcessDeviceMessage(deviceMsg []byte, conn *tcp.ConnDa
 			d.log.Error("failed to unmarshal a raw data from " + device.Name)
 			rd.Processed = false
 		}
+
 		for _, labData := range labDatas {
 			labData.RawDataID = rd.ID
 			labData.DeviceID = device.ID
 
-			err = d.store.LabDataStore.Create(labData)
+			err = d.store.LabDataStore.CreateOrUpdate(labData)
 			if err != nil {
 				d.log.Error(fmt.Sprintf("failed to create a lab data from %s with barcode %s and index %d", device.Name, labData.Barcode, labData.Index))
+				rd.Processed = false
 				continue
 			}
 		}
@@ -81,14 +83,6 @@ func (d *Driver_hl7_231) ProcessDeviceMessage(deviceMsg []byte, conn *tcp.ConnDa
 		if err != nil {
 			d.log.Error("failed to create a raw data from " + device.Name)
 			return err
-		}
-
-		for _, labData := range labDatas {
-			err = d.store.LabDataStore.Create(labData)
-			if err != nil {
-				d.log.Error(fmt.Sprintf("failed to create a lab data from %s with barcode %s and index %d", device.Name, labData.Barcode, labData.Index))
-				continue
-			}
 		}
 	}
 

@@ -148,7 +148,10 @@ func (a *DeviceServerApplication) ManageMessages() {
 			continue
 		}
 
-		driver.ProcessDeviceMessage(msg.Data, conn, device)
-
+		err = driver.ProcessDeviceMessage(msg.Data, conn, device)
+		if err != nil {
+			a.Log.Error("failed to process the device message")
+			continue
+		}
 	}
 }

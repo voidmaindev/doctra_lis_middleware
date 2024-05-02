@@ -14,7 +14,7 @@ type Store struct {
 	DeviceModelStore *DeviceModelStore
 	DeviceStore      *DeviceStore
 	LabDataStore     *LabDataStore
-	RawDataStore		 *RawDataStore
+	RawDataStore     *RawDataStore
 }
 
 // NewStore creates a new Store.
@@ -72,4 +72,9 @@ func NewStore(log *log.Logger) (*Store, error) {
 	}
 
 	return store, nil
+}
+
+// CreateTransaction begins a transaction.
+func (s *Store) CreateTransaction() *gorm.DB {
+	return s.db.Begin()
 }
