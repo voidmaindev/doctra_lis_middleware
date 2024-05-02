@@ -37,7 +37,7 @@ func (s *DeviceStore) Create(device *model.Device) error {
 // GetByID gets a device by ID.
 func (s *DeviceStore) GetByID(id uint) (*model.Device, error) {
 	device := &model.Device{}
-	err := s.db.First(device, id).Error
+	err := s.db.Preload("DeviceModel").First(device, id).Error
 	if err != nil {
 		return nil, fmt.Errorf("failed to get device by ID: %v", id)
 	}
@@ -48,7 +48,7 @@ func (s *DeviceStore) GetByID(id uint) (*model.Device, error) {
 // GetBySerial gets a device by serial.
 func (s *DeviceStore) GetBySerial(serial string) (*model.Device, error) {
 	device := &model.Device{}
-	err := s.db.Where("serial = ?", serial).First(device).Error
+	err := s.db.Preload("DeviceModel").Where("serial = ?", serial).First(device).Error
 	if err != nil {
 		return nil, fmt.Errorf("failed to get device by serial: %v", serial)
 	}
@@ -59,7 +59,7 @@ func (s *DeviceStore) GetBySerial(serial string) (*model.Device, error) {
 // GetByNetworkAddress gets a device by network address.
 func (s *DeviceStore) GetByNetAddress(networkAddress string) (*model.Device, error) {
 	device := &model.Device{}
-	err := s.db.Where("net_address = ?", networkAddress).First(device).Error
+	err := s.db.Preload("DeviceModel").Where("net_address = ?", networkAddress).First(device).Error
 	if err != nil {
 		return nil, fmt.Errorf("failed to get device by network address: %v", networkAddress)
 	}
@@ -70,7 +70,7 @@ func (s *DeviceStore) GetByNetAddress(networkAddress string) (*model.Device, err
 // GetByModelID gets all devices by model ID.
 func (s *DeviceStore) GetByModelID(modelID uint) ([]model.Device, error) {
 	devices := []model.Device{}
-	err := s.db.Where("model_id = ?", modelID).Find(&devices).Error
+	err := s.db.Where("model_id = ?", modelID).Preload("DeviceModel").Find(&devices).Error
 	if err != nil {
 		return nil, fmt.Errorf("failed to get devices by model ID: %v", modelID)
 	}

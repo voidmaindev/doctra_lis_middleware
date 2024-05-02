@@ -15,13 +15,20 @@ type TCP struct {
 	Log        *log.Logger
 	Listener   net.Listener
 	RcvChannel chan RcvData
-	Conns      map[string]net.Conn
+	Conns      map[string]*ConnData
 }
 
+// RcvData is the struct that represents the received data.
 type RcvData struct {
 	Conn       net.Conn
 	ConnString string
 	Data       []byte
+}
+
+type ConnData struct {
+	Conn       net.Conn
+	ConnString string
+	Data       string
 }
 
 // NewTCP creates a new TCP connection.
@@ -31,7 +38,7 @@ func NewTCP(log *log.Logger, listener net.Listener) *TCP {
 		Listener: listener,
 	}
 
-	tcp.Conns = map[string]net.Conn{}
+	tcp.Conns = map[string]*ConnData{}
 	tcp.RcvChannel = make(chan RcvData)
 
 	return tcp
@@ -52,10 +59,14 @@ func (t *TCP) AcceptConnections() {
 		connString := getConnString(conn)
 
 		t.Log.Info("accepted a connection from " + connString)
-		t.Conns[connString] = conn
+		t.Conns[connString] = newConnData(conn, connString)
 
 		go t.ReadMessages(conn)
 	}
+}
+
+func newConnData(conn net.Conn, connString string) *ConnData {
+	return &ConnData{Conn: conn, ConnString: connString, Data: ""}
 }
 
 // ReadMessages reads messages from the connection.
@@ -86,4 +97,3 @@ func getConnString(conn net.Conn) string {
 	ip := conn.RemoteAddr().(*net.TCPAddr).IP.String()
 	return ip
 }
-

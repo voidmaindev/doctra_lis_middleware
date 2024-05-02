@@ -4,8 +4,8 @@ import (
 	"net"
 
 	"github.com/voidmaindev/doctra_lis_middleware/config"
+	"github.com/voidmaindev/doctra_lis_middleware/driver"
 	"github.com/voidmaindev/doctra_lis_middleware/log"
-	"github.com/voidmaindev/doctra_lis_middleware/model"
 	"github.com/voidmaindev/doctra_lis_middleware/store"
 	"github.com/voidmaindev/doctra_lis_middleware/tcp"
 )
@@ -127,7 +127,9 @@ func (a *DeviceServerApplication) Stop() error {
 
 func (a *DeviceServerApplication) ManageMessages() {
 	for msg := range a.TCP.RcvChannel {
-		if a.TCP.Conns[msg.ConnString] == nil {
+		conn := a.TCP.Conns[msg.ConnString]
+		if conn == nil {
+			a.Log.Error("failed to get a connection by network address: " + msg.ConnString)
 			continue
 		}
 
@@ -140,18 +142,13 @@ func (a *DeviceServerApplication) ManageMessages() {
 			continue
 		}
 
-		rawData := model.RawData{
-			ConnString: msg.ConnString,
-			DeviceID:   device.ID,
-			Data:       msg.Data,
-		}
-
-		err = a.Store.RawDataStore.Create(&rawData)
+		driver, err := driver.NewDriver(device.DeviceModel.Driver, a.Log, a.Store)
 		if err != nil {
-			a.Log.Error("failed to create a raw data from " + device.Name)
+			a.Log.Error("failed to create a driver for " + device.Name)
 			continue
 		}
 
-		
+		driver.ProcessDeviceMessage(msg.Data, conn, device)
+
 	}
 }
