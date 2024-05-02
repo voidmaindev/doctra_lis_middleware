@@ -16,6 +16,7 @@ type Driver interface {
 	ProcessDeviceMessage([]byte, *tcp.ConnData, *model.Device) error
 }
 
+// NewDriver creates a new driver.
 func NewDriver(driverName string, logger *log.Logger, store *store.Store) (Driver, error) {
 	normalizedDriverName := normalizeDriverName(driverName)
 
@@ -27,6 +28,7 @@ func NewDriver(driverName string, logger *log.Logger, store *store.Store) (Drive
 	return nil, fmt.Errorf("unknown driver: %s", driverName)
 }
 
+// normalizeDriverName normalizes the driver name.
 func normalizeDriverName(driverName string) string {
 	rv := driverName
 	rv = strings.Trim(rv, " ")

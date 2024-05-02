@@ -75,6 +75,7 @@ func (l *Logger) Info(msg string) {
 	(*l.Logger).Info().Msg(msg)
 }
 
+// Warn logs a message at warn level
 func (l *Logger) Warn(msg string) {
 	if l.Disabled {
 		return
@@ -92,6 +93,7 @@ func (l *Logger) Error(msg string) {
 	(*l.Logger).Error().Msg(msg)
 }
 
+// Err logs a message at error level with an error
 func (l *Logger) Err(err error, msg string) {
 	if l.Disabled {
 		return

@@ -125,6 +125,7 @@ func (a *DeviceServerApplication) Stop() error {
 	return nil
 }
 
+// ManageMessages manages the messages received by the device server.
 func (a *DeviceServerApplication) ManageMessages() {
 	for msg := range a.TCP.RcvChannel {
 		conn := a.TCP.Conns[msg.ConnString]
