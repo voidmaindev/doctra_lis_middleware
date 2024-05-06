@@ -116,7 +116,7 @@ func (s *LabDataStore) GetByDeviceIDAndBarcodeAndParam(deviceID uint, barcode, p
 // GetBySerial gets a lab data by serial.
 func (s *LabDataStore) GetBySerial(serial string) ([]*model.LabData, error) {
 	labData := []*model.LabData{}
-	err := s.db.Preload("Device").Where("serial = ?", serial).Find(&labData).Order("ID").Error
+	err := s.db.Preload("Device").Joins("JOIN devices ON lab_data.device_id = devices.id").Where("devices.serial = ?", serial).Find(&labData).Order("ID").Error
 	if err != nil {
 		return nil, fmt.Errorf("failed to get lab data by serial: %v", serial)
 	}
@@ -127,7 +127,7 @@ func (s *LabDataStore) GetBySerial(serial string) ([]*model.LabData, error) {
 // GetBySerialAndBarcode gets a lab data by serial and barcode.
 func (s *LabDataStore) GetBySerialAndBarcode(serial, barcode string) ([]*model.LabData, error) {
 	labData := []*model.LabData{}
-	err := s.db.Preload("Device").Where("serial = ? AND barcode = ?", serial, barcode).Find(&labData).Order("ID").Error
+	err := s.db.Preload("Device").Joins("JOIN devices ON lab_data.device_id = devices.id").Where("devices.serial = ? AND barcode = ?", serial, barcode).Find(&labData).Order("ID").Error
 	if err != nil {
 		return nil, fmt.Errorf("failed to get lab data by serial: %v and barcode: %v", serial, barcode)
 	}
