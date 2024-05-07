@@ -36,21 +36,21 @@ func (s *LabDataStore) Create(labData *model.LabData) error {
 
 // CreateOrUpdate creates or updates a lab data.
 func (s *LabDataStore) CreateOrUpdate(labData *model.LabData) error {
-	labDataOld, err := s.GetByDeviceIDAndBarcodeAndParam(labData.DeviceID, labData.Barcode, labData.Param)
-	if err != nil {
-		labDataOld.Result = labData.Result
-		labDataOld.Unit = labData.Unit
-		labDataOld.CompletedDate = labData.CompletedDate
+	// labDataOld, err := s.GetByDeviceIDAndBarcodeAndParam(labData.DeviceID, labData.Barcode, labData.Param)
+	// if err == nil {
+	// 	labDataOld.Result = labData.Result
+	// 	labDataOld.Unit = labData.Unit
+	// 	labDataOld.CompletedDate = labData.CompletedDate
 
-		errUpd := s.Update(labDataOld)
-		if errUpd != nil {
-			return fmt.Errorf("failed to update lab data for device: %v and barcode: %v", labData.DeviceID, labData.Barcode)
-		}
+	// 	errUpd := s.Update(labDataOld)
+	// 	if errUpd != nil {
+	// 		return fmt.Errorf("failed to update lab data for device: %v and barcode: %v", labData.DeviceID, labData.Barcode)
+	// 	}
 
-		return nil
-	}
+	// 	return nil
+	// }
 
-	err = s.db.Save(labData).Error
+	err := s.db.Save(labData).Error
 	if err != nil {
 		return fmt.Errorf("failed to create or update lab data for device: %v and barcode: %v", labData.DeviceID, labData.Barcode)
 	}
