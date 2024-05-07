@@ -61,7 +61,7 @@ func (s *LabDataStore) CreateOrUpdate(labData *model.LabData) error {
 // GetByID gets a lab data by ID.
 func (s *LabDataStore) GetByID(id uint) (*model.LabData, error) {
 	labData := &model.LabData{}
-	err := s.db.Preload("Device").First(labData, id).Error
+	err := s.db.First(labData, id).Error
 	if err != nil {
 		return nil, fmt.Errorf("failed to get lab data by ID: %v", id)
 	}
@@ -72,7 +72,7 @@ func (s *LabDataStore) GetByID(id uint) (*model.LabData, error) {
 // GetByBarcode gets a lab data by barcode.
 func (s *LabDataStore) GetByBarcode(barcode string) ([]*model.LabData, error) {
 	labData := []*model.LabData{}
-	err := s.db.Preload("Device").Where("barcode = ?", barcode).Find(&labData).Error
+	err := s.db.Where("barcode = ?", barcode).Find(&labData).Error
 	if err != nil {
 		return nil, fmt.Errorf("failed to get lab data by barcode: %v", barcode)
 	}
@@ -83,7 +83,7 @@ func (s *LabDataStore) GetByBarcode(barcode string) ([]*model.LabData, error) {
 // GetByDeviceID gets lab data by device ID.
 func (s *LabDataStore) GetByDeviceID(deviceID uint) ([]*model.LabData, error) {
 	labData := []*model.LabData{}
-	err := s.db.Preload("Device").Where("device_id = ?", deviceID).Find(&labData).Order("ID").Error
+	err := s.db.Where("device_id = ?", deviceID).Find(&labData).Order("ID").Error
 	if err != nil {
 		return nil, fmt.Errorf("failed to get lab data by device ID: %v", deviceID)
 	}
@@ -94,7 +94,7 @@ func (s *LabDataStore) GetByDeviceID(deviceID uint) ([]*model.LabData, error) {
 // GetByDeviceIDAndBarcode gets a lab data by device ID and barcode.
 func (s *LabDataStore) GetByDeviceIDAndBarcode(deviceID uint, barcode string) ([]*model.LabData, error) {
 	labData := []*model.LabData{}
-	err := s.db.Preload("Device").Where("device_id = ? AND barcode = ?", deviceID, barcode).Find(&labData).Order("ID").Error
+	err := s.db.Where("device_id = ? AND barcode = ?", deviceID, barcode).Find(&labData).Order("ID").Error
 	if err != nil {
 		return nil, fmt.Errorf("failed to get lab data by device ID: %v and barcode: %v", deviceID, barcode)
 	}
@@ -105,7 +105,7 @@ func (s *LabDataStore) GetByDeviceIDAndBarcode(deviceID uint, barcode string) ([
 // GetByDeviceIDAndBarcodeAndParam gets a lab data by device ID, barcode and param.
 func (s *LabDataStore) GetByDeviceIDAndBarcodeAndParam(deviceID uint, barcode, param string) (*model.LabData, error) {
 	labData := &model.LabData{}
-	err := s.db.Preload("Device").Where("device_id = ? AND barcode = ? AND param = ?", deviceID, barcode, param).First(labData).Error
+	err := s.db.Where("device_id = ? AND barcode = ? AND param = ?", deviceID, barcode, param).First(labData).Error
 	if err != nil {
 		return nil, fmt.Errorf("failed to get lab data by device ID: %v, barcode: %v and param: %v", deviceID, barcode, param)
 	}
@@ -116,7 +116,7 @@ func (s *LabDataStore) GetByDeviceIDAndBarcodeAndParam(deviceID uint, barcode, p
 // GetBySerial gets a lab data by serial.
 func (s *LabDataStore) GetBySerial(serial string) ([]*model.LabData, error) {
 	labData := []*model.LabData{}
-	err := s.db.Preload("Device").Joins("JOIN devices ON lab_data.device_id = devices.id").Where("devices.serial = ?", serial).Find(&labData).Order("ID").Error
+	err := s.db.Joins("JOIN devices ON lab_data.device_id = devices.id").Where("devices.serial = ?", serial).Find(&labData).Order("ID").Error
 	if err != nil {
 		return nil, fmt.Errorf("failed to get lab data by serial: %v", serial)
 	}
@@ -127,7 +127,7 @@ func (s *LabDataStore) GetBySerial(serial string) ([]*model.LabData, error) {
 // GetBySerialAndBarcode gets a lab data by serial and barcode.
 func (s *LabDataStore) GetBySerialAndBarcode(serial, barcode string) ([]*model.LabData, error) {
 	labData := []*model.LabData{}
-	err := s.db.Preload("Device").Joins("JOIN devices ON lab_data.device_id = devices.id").Where("devices.serial = ? AND barcode = ?", serial, barcode).Find(&labData).Order("ID").Error
+	err := s.db.Joins("JOIN devices ON lab_data.device_id = devices.id").Where("devices.serial = ? AND barcode = ?", serial, barcode).Find(&labData).Order("ID").Error
 	if err != nil {
 		return nil, fmt.Errorf("failed to get lab data by serial: %v and barcode: %v", serial, barcode)
 	}
@@ -138,7 +138,7 @@ func (s *LabDataStore) GetBySerialAndBarcode(serial, barcode string) ([]*model.L
 // GetAll gets all lab data.
 func (s *LabDataStore) GetAll() ([]*model.LabData, error) {
 	labData := []*model.LabData{}
-	err := s.db.Preload("Device").Find(&labData).Order("ID").Error
+	err := s.db.Find(&labData).Order("ID").Error
 	if err != nil {
 		return nil, errors.New("failed to get all lab data")
 	}
