@@ -2,6 +2,7 @@ package driver
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -14,6 +15,7 @@ import (
 const (
 	rawDataStartChar = 0xb
 	rawDataEndChar   = 0x1c
+	timeParseLayout  = "20060102150405" // Time
 )
 
 // Driver_hl7_231 is the driver for the "HL7 2.3.1" laboratory device data format.
@@ -67,6 +69,12 @@ func (d *Driver_hl7_231) ProcessDeviceMessage(deviceMsg []byte, conn *tcp.ConnDa
 			rd.Processed = false
 		}
 
+		err = d.store.RawDataStore.Create(rd)
+		if err != nil {
+			d.log.Error("failed to create a raw data from " + device.Name)
+			return err
+		}
+
 		for _, labData := range labDatas {
 			labData.RawDataID = rd.ID
 			labData.DeviceID = device.ID
@@ -77,12 +85,6 @@ func (d *Driver_hl7_231) ProcessDeviceMessage(deviceMsg []byte, conn *tcp.ConnDa
 				rd.Processed = false
 				continue
 			}
-		}
-
-		err = d.store.RawDataStore.Create(rd)
-		if err != nil {
-			d.log.Error("failed to create a raw data from " + device.Name)
-			return err
 		}
 	}
 
@@ -124,17 +126,29 @@ func (d *Driver_hl7_231) unmarshalRawData(rawData string) ([]*model.LabData, err
 
 	for _, obr := range hl7msg.Segments["OBR"] {
 		for _, obx := range hl7msg.Segments["OBX"] {
-			if obr["Set ID - OBR"] == obx["Set ID - OBX"] {
-				labData := &model.LabData{
-					Barcode:       obr["Placer Order Number"].(string),
-					Index:         uint(obr["Set ID - OBR"].(int)),
-					Param:         obx["Observation Identifier"].(map[string]interface{})["Type"].(string),
-					Result:        obx["Observation Value"].(map[string]interface{})["Data"].(string),
-					Unit:          obx["Units"].(string),
-					CompletedDate: obx["Date/Time of the Observation"].(time.Time),
-				}
-				labDatas = append(labDatas, labData)
+			// if obr["Set ID - OBR"] == obx["Set ID - OBX"]obx["Set ID - OBX"] {
+			index, err := strconv.Atoi(obx["Set ID - OBX"].(string))
+			if err != nil {
+				d.log.Error("failed to convert Set ID - OBR to integer")
+				return labDatas, err
 			}
+
+			completedDate, err := time.Parse(timeParseLayout, obr["Observation Date/Time"].(string))
+			if err != nil {
+				d.log.Error("failed to parse Observation Date/Time")
+				return labDatas, err
+			}
+
+			labData := &model.LabData{
+				Barcode:       obr["Filler Order Number"].(string),
+				Index:         uint(index),
+				Param:         obx["Observation Identifier"].(map[string]interface{})["Component2"].(string),
+				Result:        obx["Observation Value"].(string),
+				Unit:          obx["Units"].(string),
+				CompletedDate: completedDate,
+			}
+			labDatas = append(labDatas, labData)
+			// }
 		}
 	}
 

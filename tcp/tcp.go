@@ -25,6 +25,7 @@ type RcvData struct {
 	Data       []byte
 }
 
+// ConnData is the struct that represents the connection data.
 type ConnData struct {
 	Conn       net.Conn
 	ConnString string
@@ -65,6 +66,7 @@ func (t *TCP) AcceptConnections() {
 	}
 }
 
+// newConnData creates a new connection data.
 func newConnData(conn net.Conn, connString string) *ConnData {
 	return &ConnData{Conn: conn, ConnString: connString, Data: ""}
 }
@@ -92,7 +94,7 @@ func (t *TCP) ReadMessages(conn net.Conn) {
 	}
 }
 
-// Close closes the connection.
+// getConnString gets the connection string.
 func getConnString(conn net.Conn) string {
 	ip := conn.RemoteAddr().(*net.TCPAddr).IP.String()
 	return ip

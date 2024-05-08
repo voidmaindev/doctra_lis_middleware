@@ -30,6 +30,7 @@ type AuthUser struct {
 	HashedPassword []byte `json:"-"`
 }
 
+// NewUserFromAuthUser creates a new user from the authentication user.
 func NewUserFromAuthUser(authUser *AuthUser) (*User, error) {
 	err := authUser.HashPassword()
 	if err != nil {
