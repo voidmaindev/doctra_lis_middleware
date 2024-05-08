@@ -1,7 +1,7 @@
 {
-	"Disable" : false,
-	"Output" : "Stdout",
-	"TimeFormat" : "RFC3339",
-	"AddCaller" : true,
-	"AddPid" : false
+  "Disable": false,
+  "Output": "stdout",
+  "TimeFormat": "RFC3339",
+  "AddCaller": true,
+  "AddPid": false
 }

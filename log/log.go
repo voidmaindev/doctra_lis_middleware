@@ -28,12 +28,17 @@ func NewLogger() (*Logger, error) {
 		return &Logger{Disabled: true}, nil
 	}
 
-	cw := zerolog.ConsoleWriter{
-		Out:        getOutput(settings.Output),
-		TimeFormat: getTimestampFormat(settings.TimeFormat),
+	output, isFile := getOutput(settings.Output)
+	var loggerContext zerolog.Context
+	if isFile {
+		loggerContext = zerolog.New(output).With().Timestamp()
+	} else {
+		cw := zerolog.ConsoleWriter{
+			Out:        output,
+			TimeFormat: getTimestampFormat(settings.TimeFormat),
+		}
+		loggerContext = zerolog.New(cw).With().Timestamp()
 	}
-
-	loggerContext := zerolog.New(cw).With().Timestamp()
 
 	if settings.AddCaller {
 		loggerContext = loggerContext.Caller()
@@ -121,14 +126,23 @@ func (l *Logger) Fatal(msg string) {
 }
 
 // getOutput returns the output writer based on the output string
-func getOutput(output string) io.Writer {
-	switch output {
+func getOutput(output string) (io.Writer, bool) {
+	switch strings.ToLower(output) {
 	case "stdout":
-		return os.Stdout
+		return os.Stdout, false
 	case "stderr":
-		return os.Stderr
+		return os.Stderr, false
 	default:
-		return os.Stderr
+		if output == "" {
+			return os.Stderr, false
+		}
+
+		file, err := os.OpenFile(output, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+		if err != nil {
+			return os.Stderr, false
+		}
+
+		return file, true
 	}
 }
 
