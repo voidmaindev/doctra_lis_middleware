@@ -1,6 +1,7 @@
 package driver
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -79,7 +80,7 @@ func (d *Driver_hl7_231) ProcessDeviceMessage(deviceMsg []byte, conn *tcp.ConnDa
 			labData.RawDataID = rd.ID
 			labData.DeviceID = device.ID
 
-			err = d.store.LabDataStore.CreateOrUpdate(labData)
+			err = d.store.LabDataStore.Create(labData)
 			if err != nil {
 				d.log.Error(fmt.Sprintf("failed to create a lab data from %s with barcode %s and index %d", device.Name, labData.Barcode, labData.Index))
 				rd.Processed = false
@@ -115,8 +116,14 @@ func (d *Driver_hl7_231) getRawDatas(msg string, prevRawData *string) []string {
 }
 
 // unmarshalRawData unmarshals the raw data.
-func (d *Driver_hl7_231) unmarshalRawData(rawData string) ([]*model.LabData, error) {
-	labDatas := []*model.LabData{}
+func (d *Driver_hl7_231) unmarshalRawData(rawData string) (labDatas []*model.LabData, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			d.log.Error("unknown error occurred while unmarshalling raw data:\n" + r.(string))
+			labDatas = []*model.LabData{}
+			err = errors.New("failed to unmarshal raw data")
+		}
+	}()
 
 	hl7msg, err := parseHL7Message(rawData)
 	if err != nil {
