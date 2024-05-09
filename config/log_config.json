@@ -2,6 +2,6 @@
   "Disable": false,
   "Output": "doctra_lis_middleware.log",
   "TimeFormat": "RFC3339",
-  "AddCaller": true,
+  "AddCaller": false,
   "AddPid": false
 }
