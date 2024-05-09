@@ -1,3 +1,4 @@
+rm -rf build
 mkdir build
 mkdir build/config
 cp config/*.json build/config/
