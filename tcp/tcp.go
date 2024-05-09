@@ -2,6 +2,7 @@ package tcp
 
 import (
 	"fmt"
+	"io"
 	"net"
 
 	"github.com/voidmaindev/doctra_lis_middleware/log"
@@ -50,7 +51,7 @@ func (t *TCP) AcceptConnections() {
 	for {
 		conn, err := t.Listener.Accept()
 		if err != nil {
-			if err == net.ErrClosed || err.Error() == "EOF" {
+			if err == net.ErrClosed || err == io.EOF || err.Error() == "EOF" {
 				t.Log.Info("TCP listener closed")
 				return
 			}
@@ -81,7 +82,7 @@ func (t *TCP) ReadMessages(conn net.Conn) {
 		buf := make([]byte, hl7BufferSize)
 		n, err := conn.Read(buf)
 		if err != nil {
-			if err == net.ErrClosed || err.Error() == "EOF" {
+			if err == net.ErrClosed || err == io.EOF || err.Error() == "EOF" {
 				t.Log.Info(fmt.Sprintf("connection from %s closed", connString))
 				return
 			}
