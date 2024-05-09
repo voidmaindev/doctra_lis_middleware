@@ -75,11 +75,15 @@ func newConnData(conn net.Conn, connString string) *ConnData {
 // ReadMessages reads messages from the connection.
 func (t *TCP) ReadMessages(conn net.Conn) {
 	connString := getConnString(conn)
-	defer conn.Close()
-	defer delete(t.Conns, connString)
+	buf := make([]byte, hl7BufferSize) // Allocate buffer once
+
+	defer func() {
+		conn.Close()
+		delete(t.Conns, connString)
+		t.Log.Info(fmt.Sprintf("connection from %s closed", connString))
+	}()
 
 	for {
-		buf := make([]byte, hl7BufferSize)
 		n, err := conn.Read(buf)
 		if err != nil {
 			if err == net.ErrClosed || err == io.EOF || err.Error() == "EOF" {
