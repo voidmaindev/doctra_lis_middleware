@@ -86,13 +86,13 @@ func (t *TCP) ReadMessages(conn net.Conn) {
 	for {
 		n, err := conn.Read(buf)
 		if err != nil {
-			if err == net.ErrClosed || err == io.EOF || err.Error() == "EOF" {
-				t.Log.Info(fmt.Sprintf("connection from %s closed", connString))
-				return
-			}
+			// if err == net.ErrClosed || err == io.EOF || err.Error() == "EOF" {
+			t.Log.Info(fmt.Sprintf("connection from %s closed", connString))
+			return
+			// }
 
-			t.Log.Err(err, "failed to read from connection")
-			continue
+			// t.Log.Err(err, "failed to read from connection")
+			// continue
 		}
 
 		t.RcvChannel <- RcvData{Conn: conn, ConnString: connString, Data: buf[:n]}
