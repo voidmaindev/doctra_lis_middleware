@@ -119,7 +119,11 @@ func (d *Driver_hl7_231) getRawDatas(msg string, prevRawData *string) []string {
 func (d *Driver_hl7_231) unmarshalRawData(rawData string) (labDatas []*model.LabData, err error) {
 	defer func() {
 		if r := recover(); r != nil {
-			d.log.Error("unknown error occurred while unmarshalling raw data:\n" + r.(string))
+			if err, ok := r.(error); ok {
+				d.log.Error("unknown error occurred while unmarshalling raw data: " + err.Error())
+			} else {
+				d.log.Error("unknown error occurred while unmarshalling raw data: " + fmt.Sprint(r))
+			}
 			labDatas = []*model.LabData{}
 			err = errors.New("failed to unmarshal raw data")
 		}
