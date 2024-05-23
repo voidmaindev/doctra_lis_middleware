@@ -20,11 +20,9 @@ const (
 
 // Driver_hl7_231 is the driver for the "HL7 2.3.1" laboratory device data format.
 type Driver_hl7_231 struct {
-	log                *log.Logger
-	store              *store.Store
-	rawDataStartString string
-	rawDataEndString   string
-	dataToBeReplaced   map[string]string
+	log              *log.Logger
+	store            *store.Store
+	dataToBeReplaced map[string]string
 }
 
 // hl7Message represents the entire HL7 message with segments stored in a map where keys are segment types.
@@ -34,16 +32,21 @@ type hl7Message struct {
 
 // NewDriver_hl7_231 creates a new "HL7 2.3.1" driver.
 func NewDriver_hl7_231(logger *log.Logger, store *store.Store) *Driver_hl7_231 {
-	d := &Driver_hl7_231{
-		log:   logger,
-		store: store,
+	return &Driver_hl7_231{
+		log:              logger,
+		store:            store,
+		dataToBeReplaced: map[string]string{"\\r": "\n"},
 	}
+}
 
-	d.rawDataStartString = fmt.Sprintf("%c", rawDataStartChar)
-	d.rawDataEndString = fmt.Sprintf("%c", rawDataEndChar)
-	d.dataToBeReplaced = map[string]string{"\\r": "\n"}
+// RawDataStartString returns the start string of the raw data.
+func (d *Driver_hl7_231) RawDataStartString() string {
+	return fmt.Sprintf("%c", rawDataStartChar)
+}
 
-	return d
+// RawDataEndString returns the end string of the raw data.
+func (d *Driver_hl7_231) RawDataEndString() string {
+	return fmt.Sprintf("%c", rawDataEndChar)
 }
 
 // ProcessDeviceMessage processes the device message.
@@ -53,7 +56,7 @@ func (d *Driver_hl7_231) ProcessDeviceMessage(deviceMsg []byte, conn *tcp.ConnDa
 		msg = strings.ReplaceAll(msg, k, v)
 	}
 
-	rawDatas := d.getRawDatas(msg, conn.PrevData)
+	rawDatas := getRawDatas(d, msg, conn.PrevData)
 
 	for _, rawData := range rawDatas {
 		rd := &model.RawData{
@@ -89,34 +92,6 @@ func (d *Driver_hl7_231) ProcessDeviceMessage(deviceMsg []byte, conn *tcp.ConnDa
 	}
 
 	return nil
-}
-
-// getRawDatas gets the raw datas from the message.
-func (d *Driver_hl7_231) getRawDatas(msg string, prds *tcp.PrevData) []string {
-	rawDatas := []string{}
-
-	for len(msg) > 0 {
-		if !prds.Started {
-			startIndex := strings.Index(msg, d.rawDataStartString)
-			if startIndex == -1 {
-				break
-			}
-			prds.Started = true
-			msg = msg[startIndex+1:]
-		} else {
-			endIndex := strings.Index(msg, d.rawDataEndString)
-			if endIndex == -1 {
-				prds.Data += msg
-				break
-			}
-			rawDatas = append(rawDatas, prds.Data+msg[:endIndex])
-			msg = msg[endIndex+1:]
-			prds.Data = ""
-			prds.Started = false
-		}
-	}
-
-	return rawDatas
 }
 
 // unmarshalRawData unmarshals the raw data.
