@@ -9,7 +9,6 @@ import (
 	"github.com/voidmaindev/doctra_lis_middleware/log"
 	"github.com/voidmaindev/doctra_lis_middleware/model"
 	"github.com/voidmaindev/doctra_lis_middleware/store"
-	"github.com/voidmaindev/doctra_lis_middleware/tcp"
 )
 
 const (
@@ -20,9 +19,8 @@ const (
 
 // Driver_hl7_231 is the driver for the "HL7 2.3.1" laboratory device data format.
 type Driver_hl7_231 struct {
-	log              *log.Logger
-	store            *store.Store
-	dataToBeReplaced map[string]string
+	log   *log.Logger
+	store *store.Store
 }
 
 // hl7Message represents the entire HL7 message with segments stored in a map where keys are segment types.
@@ -33,10 +31,19 @@ type hl7Message struct {
 // NewDriver_hl7_231 creates a new "HL7 2.3.1" driver.
 func NewDriver_hl7_231(logger *log.Logger, store *store.Store) *Driver_hl7_231 {
 	return &Driver_hl7_231{
-		log:              logger,
-		store:            store,
-		dataToBeReplaced: map[string]string{"\\r": "\n"},
+		log:   logger,
+		store: store,
 	}
+}
+
+// Log returns the logger.
+func (d *Driver_hl7_231) Log() *log.Logger {
+	return d.log
+}
+
+// Store returns the store.
+func (d *Driver_hl7_231) Store() *store.Store {
+	return d.store
 }
 
 // RawDataStartString returns the start string of the raw data.
@@ -49,53 +56,13 @@ func (d *Driver_hl7_231) RawDataEndString() string {
 	return fmt.Sprintf("%c", rawDataEndChar)
 }
 
-// ProcessDeviceMessage processes the device message.
-func (d *Driver_hl7_231) ProcessDeviceMessage(deviceMsg []byte, conn *tcp.ConnData, device *model.Device) error {
-	msg := string(deviceMsg)
-	for k, v := range d.dataToBeReplaced {
-		msg = strings.ReplaceAll(msg, k, v)
-	}
-
-	rawDatas := getRawDatas(d, msg, conn.PrevData)
-
-	for _, rawData := range rawDatas {
-		rd := &model.RawData{
-			ConnString: conn.ConnString,
-			DeviceID:   device.ID,
-			Data:       []byte(rawData),
-			Processed:  true,
-		}
-
-		labDatas, err := d.unmarshalRawData(rawData)
-		if err != nil {
-			d.log.Error("failed to unmarshal a raw data from " + device.Name)
-			rd.Processed = false
-		}
-
-		err = d.store.RawDataStore.Create(rd)
-		if err != nil {
-			d.log.Error("failed to create a raw data from " + device.Name)
-			return err
-		}
-
-		for _, labData := range labDatas {
-			labData.RawDataID = rd.ID
-			labData.DeviceID = device.ID
-
-			err = d.store.LabDataStore.Create(labData)
-			if err != nil {
-				d.log.Error(fmt.Sprintf("failed to create a lab data from %s with barcode %s and index %d", device.Name, labData.Barcode, labData.Index))
-				rd.Processed = false
-				continue
-			}
-		}
-	}
-
-	return nil
+// DataToBeReplaced returns the data to be replaced.
+func (d *Driver_hl7_231) DataToBeReplaced() map[string]string {
+	return map[string]string{"\\r": "\n"}
 }
 
 // unmarshalRawData unmarshals the raw data.
-func (d *Driver_hl7_231) unmarshalRawData(rawData string) (labDatas []*model.LabData, err error) {
+func (d *Driver_hl7_231) UnmarshalRawData(rawData string) (labDatas []*model.LabData, err error) {
 	hl7msg, err := parseHL7Message(rawData)
 	if err != nil {
 		fmt.Println("failed to parse HL7 message")

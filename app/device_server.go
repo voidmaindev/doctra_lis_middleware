@@ -1,11 +1,14 @@
 package app
 
 import (
+	"fmt"
 	"net"
+	"strings"
 
 	"github.com/voidmaindev/doctra_lis_middleware/config"
 	"github.com/voidmaindev/doctra_lis_middleware/driver"
 	"github.com/voidmaindev/doctra_lis_middleware/log"
+	"github.com/voidmaindev/doctra_lis_middleware/model"
 	"github.com/voidmaindev/doctra_lis_middleware/store"
 	"github.com/voidmaindev/doctra_lis_middleware/tcp"
 )
@@ -143,16 +146,61 @@ func (a *DeviceServerApplication) ManageMessages() {
 			continue
 		}
 
-		driver, err := driver.NewDriver(device.DeviceModel.Driver, a.Log, a.Store)
-		if err != nil {
-			a.Log.Error("failed to create a driver for " + device.Name)
-			continue
-		}
-
-		err = driver.ProcessDeviceMessage(msg.Data, conn, device)
+		err = ProcessDeviceMessage(msg.Data, conn, device, a.Log, a.Store)
 		if err != nil {
 			a.Log.Error("failed to process the device message")
 			continue
 		}
 	}
+}
+
+// ProcessDeviceMessage processes the device message.
+func ProcessDeviceMessage(deviceMsg []byte, conn *tcp.ConnData, device *model.Device, log *log.Logger, store *store.Store) error {
+	deviceDriver, err := driver.NewDriver(device.DeviceModel.Driver, log, store)
+	if err != nil {
+		log.Error(fmt.Sprintf("failed to create a driver for %s with driver name %s", device.Name, device.DeviceModel.Driver))
+		return err
+	}
+
+	msg := string(deviceMsg)
+	for k, v := range deviceDriver.DataToBeReplaced() {
+		msg = strings.ReplaceAll(msg, k, v)
+	}
+
+	rawDatas := driver.GetRawDatas(deviceDriver, msg, conn.PrevData)
+
+	for _, rawData := range rawDatas {
+		rd := &model.RawData{
+			ConnString: conn.ConnString,
+			DeviceID:   device.ID,
+			Data:       []byte(rawData),
+			Processed:  true,
+		}
+
+		labDatas, err := deviceDriver.UnmarshalRawData(rawData)
+		if err != nil {
+			deviceDriver.Log().Error("failed to unmarshal a raw data from " + device.Name)
+			rd.Processed = false
+		}
+
+		err = deviceDriver.Store().RawDataStore.Create(rd)
+		if err != nil {
+			deviceDriver.Log().Error("failed to create a raw data from " + device.Name)
+			return err
+		}
+
+		for _, labData := range labDatas {
+			labData.RawDataID = rd.ID
+			labData.DeviceID = device.ID
+
+			err = deviceDriver.Store().LabDataStore.Create(labData)
+			if err != nil {
+				deviceDriver.Log().Error(fmt.Sprintf("failed to create a lab data from %s with barcode %s and index %d", device.Name, labData.Barcode, labData.Index))
+				rd.Processed = false
+				continue
+			}
+		}
+	}
+
+	return nil
 }

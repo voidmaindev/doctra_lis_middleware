@@ -13,9 +13,12 @@ import (
 
 // Driver is the interface for the driver of the laboratory device.
 type Driver interface {
+	Log() *log.Logger
+	Store() *store.Store
 	RawDataStartString() string
 	RawDataEndString() string
-	ProcessDeviceMessage([]byte, *tcp.ConnData, *model.Device) error
+	DataToBeReplaced() map[string]string
+	UnmarshalRawData(rawData string) ([]*model.LabData, error)
 }
 
 // NewDriver creates a new driver.
@@ -42,7 +45,7 @@ func normalizeDriverName(driverName string) string {
 }
 
 // getRawDatas gets the raw datas from the message.
-func getRawDatas(d Driver, msg string, prds *tcp.PrevData) []string {
+func GetRawDatas(d Driver, msg string, prds *tcp.PrevData) []string {
 	rawDatas := []string{}
 
 	for len(msg) > 0 {
