@@ -68,4 +68,3 @@ func getRawDatas(d Driver, msg string, prds *tcp.PrevData) []string {
 
 	return rawDatas
 }
-
