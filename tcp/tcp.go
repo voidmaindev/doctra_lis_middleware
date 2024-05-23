@@ -26,11 +26,17 @@ type RcvData struct {
 	Data       []byte
 }
 
+// PrevData is the struct that represents the previous data of the connection.
+type PrevData struct {
+	Data    string
+	Started bool
+}
+
 // ConnData is the struct that represents the connection data.
 type ConnData struct {
 	Conn       net.Conn
 	ConnString string
-	Data       string
+	PrevData   *PrevData
 }
 
 // NewTCP creates a new TCP connection.
@@ -69,7 +75,7 @@ func (t *TCP) AcceptConnections() {
 
 // newConnData creates a new connection data.
 func newConnData(conn net.Conn, connString string) *ConnData {
-	return &ConnData{Conn: conn, ConnString: connString, Data: ""}
+	return &ConnData{Conn: conn, ConnString: connString, PrevData: &PrevData{}}
 }
 
 // ReadMessages reads messages from the connection.

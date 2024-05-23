@@ -1,7 +1,6 @@
 package driver
 
 import (
-	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -54,7 +53,7 @@ func (d *Driver_hl7_231) ProcessDeviceMessage(deviceMsg []byte, conn *tcp.ConnDa
 		msg = strings.ReplaceAll(msg, k, v)
 	}
 
-	rawDatas := d.getRawDatas(msg, &conn.Data)
+	rawDatas := d.getRawDatas(msg, conn.PrevData)
 
 	for _, rawData := range rawDatas {
 		rd := &model.RawData{
@@ -93,22 +92,27 @@ func (d *Driver_hl7_231) ProcessDeviceMessage(deviceMsg []byte, conn *tcp.ConnDa
 }
 
 // getRawDatas gets the raw datas from the message.
-func (d *Driver_hl7_231) getRawDatas(msg string, prevRawData *string) []string {
+func (d *Driver_hl7_231) getRawDatas(msg string, prds *tcp.PrevData) []string {
 	rawDatas := []string{}
 
-	bigChunks := strings.Split(msg, d.rawDataStartString)
-	for _, bigChunk := range bigChunks {
-		if len(bigChunk) == 0 {
-			continue
-		}
-
-		chunks := strings.Split(bigChunk, d.rawDataEndString)
-		switch len(chunks) {
-		case 1:
-			*prevRawData += bigChunk
-		case 2:
-			rawDatas = append(rawDatas, *prevRawData+chunks[0])
-			*prevRawData = ""
+	for len(msg) > 0 {
+		if !prds.Started {
+			startIndex := strings.Index(msg, d.rawDataStartString)
+			if startIndex == -1 {
+				break
+			}
+			prds.Started = true
+			msg = msg[startIndex+1:]
+		} else {
+			endIndex := strings.Index(msg, d.rawDataEndString)
+			if endIndex == -1 {
+				prds.Data += msg
+				break
+			}
+			rawDatas = append(rawDatas, prds.Data+msg[:endIndex])
+			msg = msg[endIndex+1:]
+			prds.Data = ""
+			prds.Started = false
 		}
 	}
 
@@ -117,53 +121,143 @@ func (d *Driver_hl7_231) getRawDatas(msg string, prevRawData *string) []string {
 
 // unmarshalRawData unmarshals the raw data.
 func (d *Driver_hl7_231) unmarshalRawData(rawData string) (labDatas []*model.LabData, err error) {
-	defer func() {
-		if r := recover(); r != nil {
-			if err, ok := r.(error); ok {
-				d.log.Error("unknown error occurred while unmarshalling raw data: " + err.Error())
-			} else {
-				d.log.Error("unknown error occurred while unmarshalling raw data: " + fmt.Sprint(r))
-			}
-			labDatas = []*model.LabData{}
-			err = errors.New("failed to unmarshal raw data")
-		}
-	}()
-
 	hl7msg, err := parseHL7Message(rawData)
 	if err != nil {
-		d.log.Error("failed to parse HL7 message")
+		fmt.Println("failed to parse HL7 message")
 		return labDatas, err
 	}
 
 	for _, obr := range hl7msg.Segments["OBR"] {
 		for _, obx := range hl7msg.Segments["OBX"] {
-			// if obr["Set ID - OBR"] == obx["Set ID - OBX"]obx["Set ID - OBX"] {
-			index, err := strconv.Atoi(obx["Set ID - OBX"].(string))
+			barcode, err := getBarcodeForUnmarshalRawData(obr)
 			if err != nil {
-				d.log.Error("failed to convert Set ID - OBR to integer")
+				fmt.Println("failed to get barcode for unmarshalRawData")
 				return labDatas, err
 			}
 
-			completedDate, err := time.Parse(timeParseLayout, obr["Observation Date/Time"].(string))
+			index, err := getIndexForUnmarshalRawData(obx)
 			if err != nil {
-				d.log.Error("failed to parse Observation Date/Time")
+				fmt.Println("failed to get index for unmarshalRawData")
+				return labDatas, err
+			}
+
+			param, err := getParamForUnmarshalRawData(obx)
+			if err != nil {
+				fmt.Println("failed to get param for unmarshalRawData")
+				return labDatas, err
+			}
+
+			result, err := getResultForUnmarshalRawData(obx)
+			if err != nil {
+				fmt.Println("failed to get result for unmarshalRawData")
+				return labDatas, err
+			}
+
+			unit, err := getUnitForUnmarshalRawData(obx)
+			if err != nil {
+				fmt.Println("failed to get unit for unmarshalRawData")
+				return labDatas, err
+			}
+
+			completedDate, err := getCompleteDateForUnmarshalRawData(obr, obx)
+			if err != nil {
+				fmt.Println("failed to get completed date for unmarshalRawData")
 				return labDatas, err
 			}
 
 			labData := &model.LabData{
-				Barcode:       obr["Filler Order Number"].(string),
-				Index:         uint(index),
-				Param:         obx["Observation Identifier"].(map[string]interface{})["Component2"].(string),
-				Result:        obx["Observation Value"].(string),
-				Unit:          obx["Units"].(string),
+				Barcode:       barcode,
+				Index:         index,
+				Param:         param,
+				Result:        result,
+				Unit:          unit,
 				CompletedDate: completedDate,
 			}
 			labDatas = append(labDatas, labData)
-			// }
 		}
 	}
 
 	return labDatas, nil
+}
+
+// getBarcodeForUnmarshalRawData gets the barcode for unmarshalling the raw data.
+func getBarcodeForUnmarshalRawData(obr map[string]interface{}) (string, error) {
+	barcode, ok := obr["Filler Order Number"].(string)
+	if ok {
+		return barcode, nil
+	}
+
+	return "", fmt.Errorf("failed to get barcode")
+}
+
+// getIndexForUnmarshalRawData gets the index for unmarshalling the raw data.
+func getIndexForUnmarshalRawData(obx map[string]interface{}) (uint, error) {
+	index1, err := strconv.Atoi(obx["Set ID - OBX"].(string))
+	if err == nil {
+		return uint(index1), nil
+	}
+
+	return 0, fmt.Errorf("failed to get index")
+}
+
+// getCompleteDateForUnmarshalRawData gets the completed date for unmarshalling the raw data.
+func getCompleteDateForUnmarshalRawData(obr, obx map[string]interface{}) (time.Time, error) {
+	completedDateString, ok := obr["Observation Date/Time"].(string)
+	if !ok {
+		if completedDateString, ok = obx["Date/Time of the Observation"].(string); !ok {
+			completedDateString, ok = obx["Date/Time of the Analysis"].(string)
+			if !ok {
+				return time.Time{}, fmt.Errorf("failed to get completed date")
+			}
+		}
+	}
+
+	completedDate, err := time.Parse(timeParseLayout, completedDateString)
+	if err != nil {
+		return time.Time{}, err
+	}
+
+	return completedDate, nil
+}
+
+// getParamForUnmarshalRawData gets the param for unmarshalling the raw data.
+func getParamForUnmarshalRawData(obx map[string]interface{}) (string, error) {
+	param1, ok := obx["Observation Identifier"].(string)
+	if ok {
+		return param1, nil
+	}
+
+	param2, ok := obx["Observation Identifier"].(map[string]interface{})
+	if ok {
+		return param2["Component2"].(string), nil
+	}
+
+	return "", fmt.Errorf("failed to get param")
+}
+
+// getResultForUnmarshalRawData gets the result for unmarshalling the raw data.
+func getResultForUnmarshalRawData(obx map[string]interface{}) (string, error) {
+	result1, ok := obx["Observation Value"].(string)
+	if ok {
+		return result1, nil
+	}
+
+	result2, ok := obx["Observation Value"].(map[string]interface{})
+	if ok {
+		return result2["Type"].(string), nil
+	}
+
+	return "", fmt.Errorf("failed to get result")
+}
+
+// getUnitForUnmarshalRawData gets the unit for unmarshalling the raw data.
+func getUnitForUnmarshalRawData(obx map[string]interface{}) (string, error) {
+	unit1, ok := obx["Units"].(string)
+	if ok {
+		return unit1, nil
+	}
+
+	return "", fmt.Errorf("failed to get unit")
 }
 
 // parseHL7Message parses the HL7 message.
