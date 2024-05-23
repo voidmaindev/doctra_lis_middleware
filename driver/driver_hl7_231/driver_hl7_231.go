@@ -1,6 +1,7 @@
-package driver
+package driver_hl7_231
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -12,9 +13,9 @@ import (
 )
 
 const (
-	rawDataStartChar = 0xb
-	rawDataEndChar   = 0x1c
-	timeParseLayout  = "20060102150405" // Time
+	rawDataStartString  = 0xb
+	rawDataEndString    = 0x1c
+	completedDateFormat = "20060102150405"
 )
 
 // Driver_hl7_231 is the driver for the "HL7 2.3.1" laboratory device data format.
@@ -29,7 +30,7 @@ type hl7Message struct {
 }
 
 // NewDriver_hl7_231 creates a new "HL7 2.3.1" driver.
-func NewDriver_hl7_231(logger *log.Logger, store *store.Store) *Driver_hl7_231 {
+func NewDriver(logger *log.Logger, store *store.Store) *Driver_hl7_231 {
 	return &Driver_hl7_231{
 		log:   logger,
 		store: store,
@@ -48,12 +49,12 @@ func (d *Driver_hl7_231) Store() *store.Store {
 
 // RawDataStartString returns the start string of the raw data.
 func (d *Driver_hl7_231) RawDataStartString() string {
-	return fmt.Sprintf("%c", rawDataStartChar)
+	return fmt.Sprintf("%c", rawDataStartString)
 }
 
 // RawDataEndString returns the end string of the raw data.
 func (d *Driver_hl7_231) RawDataEndString() string {
-	return fmt.Sprintf("%c", rawDataEndChar)
+	return fmt.Sprintf("%c", rawDataEndString)
 }
 
 // DataToBeReplaced returns the data to be replaced.
@@ -61,8 +62,20 @@ func (d *Driver_hl7_231) DataToBeReplaced() map[string]string {
 	return map[string]string{"\\r": "\n"}
 }
 
-// unmarshalRawData unmarshals the raw data.
-func (d *Driver_hl7_231) UnmarshalRawData(rawData string) (labDatas []*model.LabData, err error) {
+// Unmarshal unmarshals the raw data.
+func (d *Driver_hl7_231) Unmarshal(rawData string) (labDatas []*model.LabData, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			if err, ok := r.(error); ok {
+				d.log.Error("unknown error occurred while unmarshalling raw data: " + err.Error())
+			} else {
+				d.log.Error("unknown error occurred while unmarshalling raw data: " + fmt.Sprint(r))
+			}
+			labDatas = []*model.LabData{}
+			err = errors.New("failed to unmarshal raw data")
+		}
+	}()
+	
 	hl7msg, err := parseHL7Message(rawData)
 	if err != nil {
 		fmt.Println("failed to parse HL7 message")
@@ -129,7 +142,7 @@ func getBarcodeForUnmarshalRawData(obr map[string]interface{}) (string, error) {
 		return barcode, nil
 	}
 
-	return "", fmt.Errorf("failed to get barcode")
+	return "", errors.New("failed to get barcode")
 }
 
 // getIndexForUnmarshalRawData gets the index for unmarshalling the raw data.
@@ -139,7 +152,7 @@ func getIndexForUnmarshalRawData(obx map[string]interface{}) (uint, error) {
 		return uint(index1), nil
 	}
 
-	return 0, fmt.Errorf("failed to get index")
+	return 0, errors.New("failed to get index")
 }
 
 // getCompleteDateForUnmarshalRawData gets the completed date for unmarshalling the raw data.
@@ -149,12 +162,12 @@ func getCompleteDateForUnmarshalRawData(obr, obx map[string]interface{}) (time.T
 		if completedDateString, ok = obx["Date/Time of the Observation"].(string); !ok {
 			completedDateString, ok = obx["Date/Time of the Analysis"].(string)
 			if !ok {
-				return time.Time{}, fmt.Errorf("failed to get completed date")
+				return time.Time{}, errors.New("failed to get completed date")
 			}
 		}
 	}
 
-	completedDate, err := time.Parse(timeParseLayout, completedDateString)
+	completedDate, err := time.Parse(completedDateFormat, completedDateString)
 	if err != nil {
 		return time.Time{}, err
 	}
@@ -174,7 +187,7 @@ func getParamForUnmarshalRawData(obx map[string]interface{}) (string, error) {
 		return param2["Component2"].(string), nil
 	}
 
-	return "", fmt.Errorf("failed to get param")
+	return "", errors.New("failed to get param")
 }
 
 // getResultForUnmarshalRawData gets the result for unmarshalling the raw data.
@@ -189,7 +202,7 @@ func getResultForUnmarshalRawData(obx map[string]interface{}) (string, error) {
 		return result2["Type"].(string), nil
 	}
 
-	return "", fmt.Errorf("failed to get result")
+	return "", errors.New("failed to get result")
 }
 
 // getUnitForUnmarshalRawData gets the unit for unmarshalling the raw data.
@@ -199,7 +212,7 @@ func getUnitForUnmarshalRawData(obx map[string]interface{}) (string, error) {
 		return unit1, nil
 	}
 
-	return "", fmt.Errorf("failed to get unit")
+	return "", errors.New("failed to get unit")
 }
 
 // parseHL7Message parses the HL7 message.

@@ -146,7 +146,7 @@ func (a *DeviceServerApplication) ManageMessages() {
 			continue
 		}
 
-		err = ProcessDeviceMessage(msg.Data, conn, device, a.Log, a.Store)
+		err = processDeviceMessage(msg.Data, conn, device, a.Log, a.Store)
 		if err != nil {
 			a.Log.Error("failed to process the device message")
 			continue
@@ -154,8 +154,8 @@ func (a *DeviceServerApplication) ManageMessages() {
 	}
 }
 
-// ProcessDeviceMessage processes the device message.
-func ProcessDeviceMessage(deviceMsg []byte, conn *tcp.ConnData, device *model.Device, log *log.Logger, store *store.Store) error {
+// processDeviceMessage processes the device message.
+func processDeviceMessage(deviceMsg []byte, conn *tcp.ConnData, device *model.Device, log *log.Logger, store *store.Store) error {
 	deviceDriver, err := driver.NewDriver(device.DeviceModel.Driver, log, store)
 	if err != nil {
 		log.Error(fmt.Sprintf("failed to create a driver for %s with driver name %s", device.Name, device.DeviceModel.Driver))
@@ -177,7 +177,7 @@ func ProcessDeviceMessage(deviceMsg []byte, conn *tcp.ConnData, device *model.De
 			Processed:  true,
 		}
 
-		labDatas, err := deviceDriver.UnmarshalRawData(rawData)
+		labDatas, err := deviceDriver.Unmarshal(rawData)
 		if err != nil {
 			deviceDriver.Log().Error("failed to unmarshal a raw data from " + device.Name)
 			rd.Processed = false

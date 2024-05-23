@@ -2,6 +2,7 @@ package api
 
 import (
 	"github.com/gofiber/fiber/v2"
+	"github.com/voidmaindev/doctra_lis_middleware/driver"
 	"github.com/voidmaindev/doctra_lis_middleware/model"
 )
 
@@ -15,6 +16,7 @@ func (api *API) initDeviceModelAPI() {
 	api.DeviceModels.Use(isAuthorized)
 
 	api.DeviceModels.Get("/", getDeviceModels)
+	api.DeviceModels.Get("/drivers", getDrivers)
 	api.DeviceModels.Get("/:id", getDeviceModel)
 	api.DeviceModels.Post("/", createDeviceModel)
 	api.DeviceModels.Put("/:id", updateDeviceModel)
@@ -142,4 +144,17 @@ func deleteDeviceModel(c *fiber.Ctx) error {
 	}
 
 	return apiResponseData(c, fiber.StatusOK, NewAPIRV("id", deviceModel.ID))
+}
+
+// getDrivers gets all drivers.
+func getDrivers(c *fiber.Ctx) error {
+	api, err := getApiFromContext(c)
+	if err != nil {
+		api.Logger.Err(err, "failed to get the app from context")
+		return apiResponseError(c, fiber.StatusInternalServerError, "failed to get the app from context")
+	}
+
+	drivers := driver.Drivers()
+
+	return apiResponseData(c, fiber.StatusOK, NewAPIRV("drivers", drivers))
 }
