@@ -86,7 +86,7 @@ func (d *Driver_hl7_231) Unmarshal(rawData string) (labDatas []*model.LabData, e
 	for _, obr := range hl7msg.Segments["OBR"] {
 		for _, obx := range hl7msg.Segments["OBX"] {
 			if !checkObrObx || obr["Set ID - OBR"] == obx["Set ID - OBX"] {
-				barcode, err := getBarcodeForUnmarshalRawData(obr)
+				barcode, err := getBarcodeForUnmarshalRawData(obr, hl7msg)
 				if err != nil {
 					fmt.Println("failed to get barcode for unmarshalRawData")
 					return labDatas, err
@@ -139,7 +139,27 @@ func (d *Driver_hl7_231) Unmarshal(rawData string) (labDatas []*model.LabData, e
 }
 
 // getBarcodeForUnmarshalRawData gets the barcode for unmarshalling the raw data.
-func getBarcodeForUnmarshalRawData(obr map[string]interface{}) (string, error) {
+func getBarcodeForUnmarshalRawData(obr map[string]interface{}, hl7msg *hl7Message) (string, error) {
+	spm, ok := hl7msg.Segments["SPM"]
+	if ok {
+		for _, v := range spm {
+			SpecimenID, ok := v["Specimen ID"]
+			if ok {
+				barcode1, ok := SpecimenID.(string)
+				if ok {
+					return barcode1, nil
+				}
+				SpecimenIDData, ok := SpecimenID.(map[string]interface{})
+				if ok {
+					barcode2, ok := SpecimenIDData["Component1"]
+					if ok {
+						return barcode2.(string), nil
+					}
+				}
+			}
+		}
+	}
+
 	barcode, ok := obr["Filler Order Number"].(string)
 	if ok {
 		return barcode, nil
