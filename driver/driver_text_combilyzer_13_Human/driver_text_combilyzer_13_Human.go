@@ -14,7 +14,7 @@ import (
 const (
 	rawDataStartString  = 0x2
 	rawDataEndString    = 0x3
-	completedDateFormat = "20060102150405"
+	completedDateFormat = "02-01-2006 15:04"
 )
 
 // Driver_text_Combilyzer_13_Human is the driver for the "HL7 2.3.1" laboratory device data format.
@@ -71,6 +71,13 @@ func (d *Driver_text_Combilyzer_13_Human) Unmarshal(rawData string) (labDatas []
 	}()
 
 	lines := strings.Split(rawData, "\n")
+	for _, line := range lines {
+		if strings.TrimSpace(line) == "" {
+			lines = lines[1:]
+		} else {
+			break
+		}
+	}
 
 	barcode, err := getBarcodeForUnmarshalRawData(lines)
 	if err != nil {
@@ -90,6 +97,9 @@ func (d *Driver_text_Combilyzer_13_Human) Unmarshal(rawData string) (labDatas []
 			continue
 		}
 		parts := strings.Fields(line)
+		if len(parts) == 2 && strings.HasSuffix(parts[1], "mg/mmol") {
+			parts = []string{parts[0], strings.TrimSuffix(parts[1], "mg/mmol"), "mg/mmol"}
+		}
 
 		index, err := getIndexForUnmarshalRawData(i)
 		if err != nil {
@@ -132,7 +142,8 @@ func (d *Driver_text_Combilyzer_13_Human) Unmarshal(rawData string) (labDatas []
 
 // getBarcodeForUnmarshalRawData gets the barcode for unmarshalling the raw data.
 func getBarcodeForUnmarshalRawData(lines []string) (string, error) {
-	barcode := strings.TrimSpace(lines[1])
+	barcode := strings.TrimSpace(lines[2])
+	barcode = strings.TrimPrefix(barcode, "ID:")
 
 	return barcode, nil
 }
@@ -156,19 +167,40 @@ func getIndexForUnmarshalRawData(i int) (uint, error) {
 
 // getParamForUnmarshalRawData gets the param for unmarshalling the raw data.
 func getParamForUnmarshalRawData(parts []string) (string, error) {
-	return parts[0], nil
+	param := parts[0]
+	param = strings.TrimPrefix(param, "*")
+
+	return param, nil
 }
 
 // getResultForUnmarshalRawData gets the result for unmarshalling the raw data.
 func getResultForUnmarshalRawData(parts []string) (string, error) {
-	result := strings.Join(parts[1:len(parts)-1], " ")
+	result := ""
+
+	switch len(parts) {
+	case 1:
+		result = ""
+	case 2:
+		result = parts[1]
+	case 3:
+		result = parts[1]
+	case 4:
+		result = parts[2]
+	default:
+		result = strings.Join(parts[1:len(parts)-1], " ")
+	}
+
+	result = strings.TrimPrefix(result, "Normal")
 
 	return result, nil
 }
 
 // getUnitForUnmarshalRawData gets the unit for unmarshalling the raw data.
 func getUnitForUnmarshalRawData(parts []string) (string, error) {
-	unit := parts[len(parts)-1]
+	unit := ""
+	if len(parts) > 2 {
+		unit = parts[len(parts)-1]
+	}
 
 	return unit, nil
 }

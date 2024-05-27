@@ -82,7 +82,7 @@ func (d *Driver_hl7_231) Unmarshal(rawData string) (labDatas []*model.LabData, e
 		return labDatas, err
 	}
 
-	checkObrObx := len(hl7msg.Segments["OBR"]) > 0
+	checkObrObx := len(hl7msg.Segments["OBR"]) > 1
 	for _, obr := range hl7msg.Segments["OBR"] {
 		for _, obx := range hl7msg.Segments["OBX"] {
 			if !checkObrObx || obr["Set ID - OBR"] == obx["Set ID - OBX"] {
