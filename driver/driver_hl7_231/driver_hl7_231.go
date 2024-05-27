@@ -75,60 +75,63 @@ func (d *Driver_hl7_231) Unmarshal(rawData string) (labDatas []*model.LabData, e
 			err = errors.New("failed to unmarshal raw data")
 		}
 	}()
-	
+
 	hl7msg, err := parseHL7Message(rawData)
 	if err != nil {
 		fmt.Println("failed to parse HL7 message")
 		return labDatas, err
 	}
 
+	checkObrObx := len(hl7msg.Segments["OBR"]) > 0
 	for _, obr := range hl7msg.Segments["OBR"] {
 		for _, obx := range hl7msg.Segments["OBX"] {
-			barcode, err := getBarcodeForUnmarshalRawData(obr)
-			if err != nil {
-				fmt.Println("failed to get barcode for unmarshalRawData")
-				return labDatas, err
-			}
+			if !checkObrObx || obr["Set ID - OBR"] == obx["Set ID - OBX"] {
+				barcode, err := getBarcodeForUnmarshalRawData(obr)
+				if err != nil {
+					fmt.Println("failed to get barcode for unmarshalRawData")
+					return labDatas, err
+				}
 
-			index, err := getIndexForUnmarshalRawData(obx)
-			if err != nil {
-				fmt.Println("failed to get index for unmarshalRawData")
-				return labDatas, err
-			}
+				index, err := getIndexForUnmarshalRawData(obx)
+				if err != nil {
+					fmt.Println("failed to get index for unmarshalRawData")
+					return labDatas, err
+				}
 
-			param, err := getParamForUnmarshalRawData(obx)
-			if err != nil {
-				fmt.Println("failed to get param for unmarshalRawData")
-				return labDatas, err
-			}
+				param, err := getParamForUnmarshalRawData(obx)
+				if err != nil {
+					fmt.Println("failed to get param for unmarshalRawData")
+					return labDatas, err
+				}
 
-			result, err := getResultForUnmarshalRawData(obx)
-			if err != nil {
-				fmt.Println("failed to get result for unmarshalRawData")
-				return labDatas, err
-			}
+				result, err := getResultForUnmarshalRawData(obx)
+				if err != nil {
+					fmt.Println("failed to get result for unmarshalRawData")
+					return labDatas, err
+				}
 
-			unit, err := getUnitForUnmarshalRawData(obx)
-			if err != nil {
-				fmt.Println("failed to get unit for unmarshalRawData")
-				return labDatas, err
-			}
+				unit, err := getUnitForUnmarshalRawData(obx)
+				if err != nil {
+					fmt.Println("failed to get unit for unmarshalRawData")
+					return labDatas, err
+				}
 
-			completedDate, err := getCompleteDateForUnmarshalRawData(obr, obx)
-			if err != nil {
-				fmt.Println("failed to get completed date for unmarshalRawData")
-				return labDatas, err
-			}
+				completedDate, err := getCompleteDateForUnmarshalRawData(obr, obx)
+				if err != nil {
+					fmt.Println("failed to get completed date for unmarshalRawData")
+					return labDatas, err
+				}
 
-			labData := &model.LabData{
-				Barcode:       barcode,
-				Index:         index,
-				Param:         param,
-				Result:        result,
-				Unit:          unit,
-				CompletedDate: completedDate,
+				labData := &model.LabData{
+					Barcode:       barcode,
+					Index:         index,
+					Param:         param,
+					Result:        result,
+					Unit:          unit,
+					CompletedDate: completedDate,
+				}
+				labDatas = append(labDatas, labData)
 			}
-			labDatas = append(labDatas, labData)
 		}
 	}
 
