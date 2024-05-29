@@ -205,7 +205,7 @@ func getParamForUnmarshalRawData(obx map[string]interface{}) (string, error) {
 		param1, ok := obx["Observation Identifier"].(map[string]interface{})
 		if ok {
 			param = param1["Component2"].(string)
-		} 
+		}
 	}
 
 	if param == "" {
@@ -341,6 +341,12 @@ func getFieldDefinitions(segmentName string) []string {
 		return []string{"Set ID - OBR", "Placer Order Number", "Filler Order Number", "Universal Service ID", "Priority", "Requested Date/Time", "Observation Date/Time", "Observation End Date/Time", "Collection Volume", "Collector Identifier", "Specimen Action Code", "Danger Code", "Relevant Clinical Info", "Specimen Received Date/Time", "Specimen Source", "Ordering Provider", "Order Callback Phone Number", "Placer Field 1", "Placer Field 2", "Filler Field 1", "Filler Field 2", "Results Rpt/Status Chng - Date/Time", "Charge to Practice", "Diagnostic Serv Sect ID", "Result Status", "Parent Result", "Quantity/Timing", "Result Copies To", "Parent", "Transportation Mode", "Reason for Study", "Principal Result Interpreter", "Assistant Result Interpreter", "Technician", "Transcriptionist", "Scheduled Date/Time", "Number of Sample Containers", "Transport Logistics of Collected Sample", "Collector’s Comment", "Transport Arrangement Responsibility", "Transport Arranged", "Escort Required", "Planned Patient Transport Comment"}
 	case "PV1":
 		return []string{"Set ID - PV1", "Patient Class", "Assigned Patient Location", "Admission Type", "Preadmit Number", "Prior Patient Location", "Attending Doctor", "Referring Doctor", "Consulting Doctor", "Hospital Service", "Temporary Location", "Preadmit Test Indicator", "Readmission Indicator", "Admit Source", "Ambulatory Status", "VIP Indicator", "Admitting Doctor", "Patient Type", "Visit Number", "Financial Class", "Charge Price Indicator", "Courtesy Code", "Credit Rating", "Contract Code", "Contract Effective Date", "Contract Amount", "Contract Period", "Interest Code", "Transfer to Bad Debt Code", "Transfer to Bad Debt Date", "Bad Debt Agency Code", "Bad Debt Transfer Amount", "Bad Debt Recovery Amount", "Delete Account Indicator", "Delete Account Date", "Discharge Disposition", "Discharged to Location", "Diet Type", "Servicing Facility", "Bed Status", "Account Status", "Pending Location", "Prior Temporary Location", "Admit Date/Time", "Discharge Date/Time", "Current Patient Balance", "Total Charges", "Total Adjustments", "Total Payments", "Alternate Visit ID", "Visit Indicator", "Other Healthcare Provider"}
+	case "SPM":
+		return []string{"Set ID - SPM", "Specimen ID", "Specimen Parent IDs", "Specimen Type", "Specimen Type Modifier", "Specimen Additives", "Specimen Collection Method", "Specimen Source Site", "Specimen Source Site Modifier", "Specimen Collection Site", "Specimen Role", "Specimen Collection Amount", "Grouped Specimen Count", "Specimen Description", "Specimen Handling Code", "Specimen Risk Code", "Specimen Collection Date/Time", "Specimen Received Date/Time", "Specimen Expiration Date/Time", "Specimen Availability", "Specimen Reject Reason", "Specimen Quality", "Specimen Appropriateness", "Specimen Condition", "Specimen Child Role"}
+	case "ORC":
+		return []string{"Order Control", "Placer Order Number", "Filler Order Number", "Placer Group Number", "Order Status", "Response Flag", "Quantity/Timing", "Parent", "Date/Time of Transaction", "Entered By", "Verified By", "Ordering Provider", "Enterer's Location", "Call Back Phone Number", "Order Effective Date/Time", "Order Control Code Reason", "Entering Organization", "Entering Device", "Action By", "Advanced Beneficiary Notice Code", "Ordering Facility Name", "Ordering Facility Address", "Ordering Facility Phone Number", "Ordering Provider Address"}
+	case "NTE":
+		return []string{"Set ID - NTE", "Source of Comment", "Comment", "Comment Type", "Entered By", "Entered Date/Time", "Effective Start Date", "Expiration Date", "Comment Completion Date"}
 	default:
 		return []string{}
 	}
