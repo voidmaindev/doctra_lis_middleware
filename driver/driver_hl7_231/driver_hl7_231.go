@@ -200,17 +200,21 @@ func getCompleteDateForUnmarshalRawData(obr, obx map[string]interface{}) (time.T
 
 // getParamForUnmarshalRawData gets the param for unmarshalling the raw data.
 func getParamForUnmarshalRawData(obx map[string]interface{}) (string, error) {
-	param1, ok := obx["Observation Identifier"].(string)
-	if ok {
-		return param1, nil
+	param, ok := obx["Observation Identifier"].(string)
+	if !ok {
+		param1, ok := obx["Observation Identifier"].(map[string]interface{})
+		if ok {
+			param = param1["Component2"].(string)
+		} 
 	}
 
-	param2, ok := obx["Observation Identifier"].(map[string]interface{})
-	if ok {
-		return param2["Component2"].(string), nil
+	if param == "" {
+		return "", errors.New("failed to get param")
 	}
 
-	return "", errors.New("failed to get param")
+	param = strings.TrimPrefix(param, "*")
+
+	return param, nil
 }
 
 // getResultForUnmarshalRawData gets the result for unmarshalling the raw data.
