@@ -2,6 +2,7 @@ package driver_hl7_231
 
 import (
 	"fmt"
+	"net"
 
 	"github.com/voidmaindev/doctra_lis_middleware/log"
 	"github.com/voidmaindev/doctra_lis_middleware/store"
@@ -50,4 +51,9 @@ func (d *Driver_hl7_231) RawDataEndString() string {
 // DataToBeReplaced returns the data to be replaced.
 func (d *Driver_hl7_231) DataToBeReplaced() map[string]string {
 	return map[string]string{"\\r": "\n"}
+}
+
+// SendACK sends an ACK message.
+func (d *Driver_hl7_231) SendACK(conn net.Conn) error {
+	return nil
 }

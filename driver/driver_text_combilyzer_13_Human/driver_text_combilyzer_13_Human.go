@@ -2,6 +2,7 @@ package driver_text_combilyzer_13_Human
 
 import (
 	"fmt"
+	"net"
 
 	"github.com/voidmaindev/doctra_lis_middleware/log"
 	"github.com/voidmaindev/doctra_lis_middleware/store"
@@ -50,4 +51,9 @@ func (d *Driver_text_Combilyzer_13_Human) RawDataEndString() string {
 // DataToBeReplaced returns the data to be replaced.
 func (d *Driver_text_Combilyzer_13_Human) DataToBeReplaced() map[string]string {
 	return map[string]string{}
+}
+
+// SendACK sends an ACK message.
+func (d *Driver_text_Combilyzer_13_Human) SendACK(conn net.Conn) error {
+	return nil
 }

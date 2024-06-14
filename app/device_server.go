@@ -162,6 +162,12 @@ func processDeviceMessage(deviceMsg []byte, conn *tcp.ConnData, device *model.De
 		return err
 	}
 
+	err = deviceDriver.SendACK(conn.Conn)
+	if err != nil {
+		log.Err(err, "failed to send an ACK message to "+device.Name)
+		return err
+	}
+
 	msg := string(deviceMsg)
 	for k, v := range deviceDriver.DataToBeReplaced() {
 		msg = strings.ReplaceAll(msg, k, v)

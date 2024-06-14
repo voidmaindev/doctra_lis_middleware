@@ -3,6 +3,7 @@ package driver
 
 import (
 	"fmt"
+	"net"
 	"strings"
 
 	"github.com/voidmaindev/doctra_lis_middleware/driver/driver_astm"
@@ -21,7 +22,8 @@ type Driver interface {
 	RawDataStartString() string
 	RawDataEndString() string
 	DataToBeReplaced() map[string]string
-	Unmarshal(rawData string) ([]*model.LabData, error)
+	Unmarshal(string) ([]*model.LabData, error)
+	SendACK(net.Conn) error
 }
 
 // NewDriver creates a new driver.

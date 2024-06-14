@@ -2,6 +2,7 @@ package driver_astm
 
 import (
 	"fmt"
+	"net"
 
 	"github.com/voidmaindev/doctra_lis_middleware/log"
 	"github.com/voidmaindev/doctra_lis_middleware/store"
@@ -11,6 +12,7 @@ const (
 	rawDataStartString  = 0x05
 	rawDataEndString    = 0x04
 	completedDateFormat = "20060102150405"
+	ack                 = 0x06
 )
 
 // Driver_astm is the driver for the "ASTM" laboratory device data format.
@@ -50,4 +52,14 @@ func (d *Driver_astm) RawDataEndString() string {
 // DataToBeReplaced returns the data to be replaced.
 func (d *Driver_astm) DataToBeReplaced() map[string]string {
 	return map[string]string{}
+}
+
+// SendACK sends an ACK message.
+func (d *Driver_astm) SendACK(conn net.Conn) error {
+	_, err := conn.Write([]byte{ack})
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
