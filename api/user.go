@@ -232,8 +232,6 @@ func updateUser(c *fiber.Ctx) error {
 		return apiResponseError(c, fiber.StatusInternalServerError, "failed to update the user from the auth user")
 	}
 
-	user.SetDefaultRole()
-
 	if err := api.Store.UserStore.Update(user); err != nil {
 		api.Logger.Err(err, "failed to update the user")
 		return apiResponseError(c, fiber.StatusInternalServerError, "failed to update the user")
