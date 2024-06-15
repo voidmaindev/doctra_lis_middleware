@@ -57,6 +57,10 @@ func (u *User) UpdateFromAuthUser(authUser *AuthUser) error {
 	u.Password = authUser.HashedPassword
 	u.Role = authUser.Role
 
+	if u.Role == "" {
+		u.SetDefaultRole()
+	}
+
 	return nil
 }
 
