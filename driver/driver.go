@@ -3,8 +3,10 @@ package driver
 
 import (
 	"fmt"
+	"net"
 	"strings"
 
+	"github.com/voidmaindev/doctra_lis_middleware/driver/driver_astm"
 	"github.com/voidmaindev/doctra_lis_middleware/driver/driver_hl7_231"
 	"github.com/voidmaindev/doctra_lis_middleware/driver/driver_text_combilyzer_13_Human"
 	"github.com/voidmaindev/doctra_lis_middleware/log"
@@ -20,7 +22,8 @@ type Driver interface {
 	RawDataStartString() string
 	RawDataEndString() string
 	DataToBeReplaced() map[string]string
-	Unmarshal(rawData string) ([]*model.LabData, error)
+	Unmarshal(string) ([]*model.LabData, error)
+	SendACK(net.Conn) error
 }
 
 // NewDriver creates a new driver.
@@ -30,6 +33,8 @@ func NewDriver(driverName string, logger *log.Logger, store *store.Store) (Drive
 	switch normalizedDriverName {
 	case "hl7231":
 		return driver_hl7_231.NewDriver(logger, store), nil
+	case "astm":
+		return driver_astm.NewDriver(logger, store), nil
 	case "textcombilyzer13human":
 		return driver_text_combilyzer_13_Human.NewDriver(logger, store), nil
 	}
@@ -53,6 +58,7 @@ func Drivers() []string {
 	return []string{
 		"hl7_231",
 		"text_combilyzer_13_human",
+		"astm",
 	}
 }
 
