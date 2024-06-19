@@ -87,12 +87,12 @@ func (d *Driver_astm) Unmarshal(rawData string) (labDatas []*model.LabData, err 
 		labDatas = append(labDatas, labData)
 	}
 
-	return nil, nil
+	return labDatas, nil
 }
 
 // getBarcodeForUnmarshalRawData gets the barcode for unmarshalling the raw data.
 func getBarcodeForUnmarshalRawData(msg Message) (string, error) {
-	barcode := msg.Order.ID
+	barcode := strings.Split(msg.Order.PatientName, "^")[0]
 
 	return barcode, nil
 }

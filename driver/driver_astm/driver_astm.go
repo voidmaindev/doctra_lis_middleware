@@ -51,7 +51,7 @@ func (d *Driver_astm) RawDataEndString() string {
 
 // DataToBeReplaced returns the data to be replaced.
 func (d *Driver_astm) DataToBeReplaced() map[string]string {
-	return map[string]string{}
+	return map[string]string{"\r": "", "\n": ""}
 }
 
 // SendACK sends an ACK message.
