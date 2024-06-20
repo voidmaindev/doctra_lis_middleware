@@ -29,62 +29,64 @@ func (d *Driver_astm) Unmarshal(rawData string) (labDatas []*model.LabData, err 
 		}
 	}()
 
-	astm_msg := parseASTMMessage(rawData)
+	astm_msgs := parseASTMMessages(rawData)
 
-	barcode, err := getBarcodeForUnmarshalRawData(astm_msg)
-	if err != nil {
-		fmt.Println("failed to get barcode for unmarshalRawData")
-		return labDatas, err
-	}
-
-	index := 0
-	for _, result := range astm_msg.Results {
-		if result.TestID == "" || result.Value == "" || result.Units == "" || result.Timestamp == "" {
-			continue
-		}
-
-		index++
-
-		index, err := getIndexForUnmarshalRawData(index)
+	for _, astm_msg := range astm_msgs {
+		barcode, err := getBarcodeForUnmarshalRawData(astm_msg)
 		if err != nil {
-			fmt.Println("failed to get index for unmarshalRawData")
+			fmt.Println("failed to get barcode for unmarshalRawData")
 			return labDatas, err
 		}
 
-		param, err := getParamForUnmarshalRawData(result)
-		if err != nil {
-			fmt.Println("failed to get param for unmarshalRawData")
-			return labDatas, err
-		}
+		index := 0
+		for _, result := range astm_msg.Results {
+			if result.TestID == "" || result.Value == "" || result.Units == "" || result.Timestamp == "" {
+				continue
+			}
 
-		res, err := getResultForUnmarshalRawData(result)
-		if err != nil {
-			fmt.Println("failed to get result for unmarshalRawData")
-			return labDatas, err
-		}
+			index++
 
-		unit, err := getUnitForUnmarshalRawData(result)
-		if err != nil {
-			fmt.Println("failed to get unit for unmarshalRawData")
-			return labDatas, err
-		}
+			index, err := getIndexForUnmarshalRawData(index)
+			if err != nil {
+				fmt.Println("failed to get index for unmarshalRawData")
+				return labDatas, err
+			}
 
-		completedDate, err := getCompleteDateForUnmarshalRawData(result)
-		if err != nil {
-			fmt.Println("failed to get completed date for unmarshalRawData")
-			return labDatas, err
-		}
+			param, err := getParamForUnmarshalRawData(result)
+			if err != nil {
+				fmt.Println("failed to get param for unmarshalRawData")
+				return labDatas, err
+			}
 
-		labData := &model.LabData{
-			Barcode:       barcode,
-			Index:         index,
-			Param:         param,
-			Result:        res,
-			Unit:          unit,
-			CompletedDate: completedDate,
-		}
+			res, err := getResultForUnmarshalRawData(result)
+			if err != nil {
+				fmt.Println("failed to get result for unmarshalRawData")
+				return labDatas, err
+			}
 
-		labDatas = append(labDatas, labData)
+			unit, err := getUnitForUnmarshalRawData(result)
+			if err != nil {
+				fmt.Println("failed to get unit for unmarshalRawData")
+				return labDatas, err
+			}
+
+			completedDate, err := getCompleteDateForUnmarshalRawData(result)
+			if err != nil {
+				fmt.Println("failed to get completed date for unmarshalRawData")
+				return labDatas, err
+			}
+
+			labData := &model.LabData{
+				Barcode:       barcode,
+				Index:         index,
+				Param:         param,
+				Result:        res,
+				Unit:          unit,
+				CompletedDate: completedDate,
+			}
+
+			labDatas = append(labDatas, labData)
+		}
 	}
 
 	return labDatas, nil
@@ -202,10 +204,11 @@ type Message struct {
 	Term     Termination
 }
 
-// parseMessage parses the raw data into a structured message
-func parseASTMMessage(data string) Message {
-	var message Message
+// parseASTMMessages parses the raw data into a slice of structured messages
+func parseASTMMessages(data string) []Message {
+	var messages []Message
 	segments := strings.Split(data, stx)
+	var currentMessage Message
 	var results []Result
 	var comments []Comment
 
@@ -224,24 +227,36 @@ func parseASTMMessage(data string) Message {
 
 			switch segmentType {
 			case "H":
-				message.Header = parseHeader(content)
+				if currentMessage.Header.Type != "" {
+					currentMessage.Results = results
+					currentMessage.Comments = comments
+					messages = append(messages, currentMessage)
+					currentMessage = Message{}
+					results = []Result{}
+					comments = []Comment{}
+				}
+				currentMessage.Header = parseHeader(content)
 			case "P":
-				message.Patient = parsePatient(content)
+				currentMessage.Patient = parsePatient(content)
 			case "O":
-				message.Order = parseOrder(content)
+				currentMessage.Order = parseOrder(content)
 			case "R":
 				results = append(results, parseResult(content))
 			case "C":
 				comments = append(comments, parseComment(content))
 			case "L":
-				message.Term = parseTermination(content)
+				currentMessage.Term = parseTermination(content)
 			}
 		}
 	}
 
-	message.Results = results
-	message.Comments = comments
-	return message
+	if currentMessage.Header.Type != "" {
+		currentMessage.Results = results
+		currentMessage.Comments = comments
+		messages = append(messages, currentMessage)
+	}
+
+	return messages
 }
 
 // parseHeader parses the header segment
@@ -287,7 +302,7 @@ func parseOrder(content string) Order {
 func parseResult(content string) Result {
 	parts := strings.Split(content, "|")
 	testIDs := strings.Split(parts[2], "^")
-	testId := testIDs[len(testIDs)-1]
+	testId := testIDs[3]
 	return Result{
 		Type:           "R",
 		TestID:         testId,
