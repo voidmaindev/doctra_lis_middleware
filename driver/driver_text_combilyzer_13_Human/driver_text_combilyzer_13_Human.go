@@ -14,7 +14,7 @@ const (
 	completedDateFormat = "02-01-2006 15:04"
 )
 
-// Driver_text_Combilyzer_13_Human is the driver for the "HL7 2.3.1" laboratory device data format.
+// Driver_text_Combilyzer_13_Human is the driver for the "Combilyzer 13 Human" laboratory device data format.
 type Driver_text_Combilyzer_13_Human struct {
 	log   *log.Logger
 	store *store.Store

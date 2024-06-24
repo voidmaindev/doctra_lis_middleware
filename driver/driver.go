@@ -9,6 +9,7 @@ import (
 	"github.com/voidmaindev/doctra_lis_middleware/driver/driver_astm"
 	"github.com/voidmaindev/doctra_lis_middleware/driver/driver_hl7_231"
 	"github.com/voidmaindev/doctra_lis_middleware/driver/driver_text_combilyzer_13_Human"
+	"github.com/voidmaindev/doctra_lis_middleware/driver/driver_text_humalyzer_primus_human"
 	"github.com/voidmaindev/doctra_lis_middleware/log"
 	"github.com/voidmaindev/doctra_lis_middleware/model"
 	"github.com/voidmaindev/doctra_lis_middleware/store"
@@ -37,6 +38,8 @@ func NewDriver(driverName string, logger *log.Logger, store *store.Store) (Drive
 		return driver_astm.NewDriver(logger, store), nil
 	case "textcombilyzer13human":
 		return driver_text_combilyzer_13_Human.NewDriver(logger, store), nil
+	case "texthumalyzerprimushuman":
+		return driver_text_humalyzer_primus_human.NewDriver(logger, store), nil
 	}
 
 	return nil, fmt.Errorf("unknown driver: %s", driverName)
@@ -47,9 +50,11 @@ func normalizeDriverName(driverName string) string {
 	rv := driverName
 	rv = strings.Trim(rv, " ")
 	rv = strings.ToLower(rv)
-	rv = strings.ReplaceAll(rv, ".", "")
-	rv = strings.ReplaceAll(rv, " ", "")
-	rv = strings.ReplaceAll(rv, "_", "")
+
+	deletions := []string{".", " ", "_"}
+	for _, deletion := range deletions {
+		rv = strings.ReplaceAll(rv, deletion, "")
+	}
 
 	return rv
 }
@@ -57,14 +62,18 @@ func normalizeDriverName(driverName string) string {
 func Drivers() []string {
 	return []string{
 		"hl7_231",
-		"text_combilyzer_13_human",
 		"astm",
+		"text_combilyzer_13_human",
+		"text_humalyzer_primus_human",
 	}
 }
 
 // GetRawDatas gets the raw datas from the message.
 func GetRawDatas(d Driver, msg string, prds *tcp.PrevData) []string {
 	rawDatas := []string{}
+
+	rawDataStartString := d.RawDataStartString()
+	rawDataEndString := d.RawDataEndString()
 
 	for len(msg) > 0 {
 		if !prds.Started {
@@ -73,15 +82,18 @@ func GetRawDatas(d Driver, msg string, prds *tcp.PrevData) []string {
 				break
 			}
 			prds.Started = true
-			msg = msg[startIndex+1:]
+			msg = msg[startIndex+len(rawDataStartString):]
 		} else {
 			endIndex := strings.Index(msg, d.RawDataEndString())
 			if endIndex == -1 {
 				prds.Data += msg
 				break
 			}
-			rawDatas = append(rawDatas, prds.Data+msg[:endIndex])
-			msg = msg[endIndex+1:]
+			rawData := prds.Data + msg[:endIndex]
+			if len(rawData) > 0 {
+				rawDatas = append(rawDatas, rawData)
+			}
+			msg = msg[endIndex+len(rawDataEndString):]
 			prds.Data = ""
 			prds.Started = false
 		}
