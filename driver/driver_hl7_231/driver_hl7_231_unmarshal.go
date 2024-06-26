@@ -234,7 +234,7 @@ func parseHL7Message(rawMessage string) (*hl7Message, error) {
 			}
 			componentNames := getComponentNames(segmentName, fieldName)
 
-			if strings.ContainsAny(field, delimiters.component+delimiters.repetition+delimiters.subComponent) {
+			if strings.ContainsAny(field, delimiters.component+delimiters.repetition+delimiters.subComponent) && !(segmentName == "MSH" && fieldName == "Encoding Characters") {
 				segmentFields[fieldName] = parseComplexField(field, delimiters, componentNames)
 			} else {
 				segmentFields[fieldName] = field
