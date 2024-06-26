@@ -46,8 +46,7 @@ func (d *driver_text_humalyzer_primus_human) Unmarshal(rawData string) (labDatas
 
 		parts := strings.Split(line, ",")
 		if len(parts) < 9 {
-			fmt.Println("invalid raw data")
-			return labDatas, err
+			continue
 		}
 
 		barcode, err := getBarcodeForUnmarshalRawData(parts)
