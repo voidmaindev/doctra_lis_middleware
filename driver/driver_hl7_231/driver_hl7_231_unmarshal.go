@@ -108,9 +108,26 @@ func getBarcodeForUnmarshalRawData(obr map[string]interface{}, hl7msg *hl7Messag
 				}
 				SpecimenIDData, ok := SpecimenID.(map[string]interface{})
 				if ok {
-					barcode2, ok := SpecimenIDData["Component1"]
+					barcodePre1, ok := SpecimenIDData["Component1"]
 					if ok {
-						return barcode2.(string), nil
+						barcode2, ok := barcodePre1.(string)
+						if ok && barcode2 != "" {
+							return barcode2, nil
+						}
+					}
+					barcodePre2, ok := SpecimenIDData["Component2"]
+					if ok {
+						barcode2, ok := barcodePre2.(string)
+						if ok && barcode2 != "" {
+							return barcode2, nil
+						}
+						barcodePre2Pre, ok := barcodePre2.(map[string]string)
+						if ok {
+							barcode3, ok := barcodePre2Pre["Component2.Subcomponent1"]
+							if ok {
+								return barcode3, nil
+							}
+						}
 					}
 				}
 			}
