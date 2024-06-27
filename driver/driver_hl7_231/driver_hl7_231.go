@@ -53,7 +53,20 @@ func (d *Driver_hl7_231) DataToBeReplaced() map[string]string {
 	return map[string]string{"\\r": "\n"}
 }
 
-// SendACK sends an ACK message.
-func (d *Driver_hl7_231) SendACK(conn net.Conn) error {
+// SendSimpleACK sends an ACK message.
+func (d *Driver_hl7_231) SendSimpleACK(conn net.Conn) error {
+	return nil
+}
+
+// PostUnmarshalACtions performs the post-unmarshal actions.
+func (d *Driver_hl7_231) PostUnmarshalACtions(conn net.Conn, data map[string]interface{}) error {
+	// Send ACK
+	if ackMsg, ok := data["ACK"]; ok {
+		_, err := conn.Write([]byte(ackMsg.(string)))
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }

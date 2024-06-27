@@ -53,7 +53,12 @@ func (d *Driver_text_Combilyzer_13_Human) DataToBeReplaced() map[string]string {
 	return map[string]string{}
 }
 
-// SendACK sends an ACK message.
-func (d *Driver_text_Combilyzer_13_Human) SendACK(conn net.Conn) error {
+// SendSimpleACK sends an ACK message.
+func (d *Driver_text_Combilyzer_13_Human) SendSimpleACK(conn net.Conn) error {
+	return nil
+}
+
+// PostUnmarshalACtions performs the post-unmarshal actions.
+func (d *Driver_text_Combilyzer_13_Human) PostUnmarshalACtions(conn net.Conn, data map[string]interface{}) error {
 	return nil
 }

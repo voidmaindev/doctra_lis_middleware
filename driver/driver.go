@@ -23,8 +23,9 @@ type Driver interface {
 	RawDataStartString() string
 	RawDataEndString() string
 	DataToBeReplaced() map[string]string
-	Unmarshal(string) ([]*model.LabData, error)
-	SendACK(net.Conn) error
+	Unmarshal(string) ([]*model.LabData, map[string]interface{}, error)
+	SendSimpleACK(net.Conn) error
+	PostUnmarshalACtions(net.Conn, map[string]interface{}) error
 }
 
 // NewDriver creates a new driver.

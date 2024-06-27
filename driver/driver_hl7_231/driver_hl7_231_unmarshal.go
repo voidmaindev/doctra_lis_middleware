@@ -16,7 +16,7 @@ type hl7Message struct {
 }
 
 // Unmarshal unmarshals the raw data.
-func (d *Driver_hl7_231) Unmarshal(rawData string) (labDatas []*model.LabData, err error) {
+func (d *Driver_hl7_231) Unmarshal(rawData string) (labDatas []*model.LabData, additionalData map[string]interface{}, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			if err, ok := r.(error); ok {
@@ -32,8 +32,12 @@ func (d *Driver_hl7_231) Unmarshal(rawData string) (labDatas []*model.LabData, e
 	hl7msg, err := parseHL7Message(rawData)
 	if err != nil {
 		fmt.Println("failed to parse HL7 message")
-		return labDatas, err
+		return labDatas, nil, err
 	}
+
+	ackMsg := hl7msg.Segments["ACK"][0]["ACK"].(string)
+	ackMsg = fmt.Sprintf("%c", rawDataStartString) + ackMsg + fmt.Sprintf("%c", rawDataEndString)
+	additionalData = map[string]interface{}{"ACK": ackMsg}
 
 	checkObrObx := len(hl7msg.Segments["OBR"]) > 1
 	for _, obr := range hl7msg.Segments["OBR"] {
@@ -42,37 +46,37 @@ func (d *Driver_hl7_231) Unmarshal(rawData string) (labDatas []*model.LabData, e
 				barcode, err := getBarcodeForUnmarshalRawData(obr, hl7msg)
 				if err != nil {
 					fmt.Println("failed to get barcode for unmarshalRawData")
-					return labDatas, err
+					return labDatas, nil, err
 				}
 
 				index, err := getIndexForUnmarshalRawData(obx)
 				if err != nil {
 					fmt.Println("failed to get index for unmarshalRawData")
-					return labDatas, err
+					return labDatas, nil, err
 				}
 
 				param, err := getParamForUnmarshalRawData(obx)
 				if err != nil {
 					fmt.Println("failed to get param for unmarshalRawData")
-					return labDatas, err
+					return labDatas, nil, err
 				}
 
 				result, err := getResultForUnmarshalRawData(obx)
 				if err != nil {
 					fmt.Println("failed to get result for unmarshalRawData")
-					return labDatas, err
+					return labDatas, nil, err
 				}
 
 				unit, err := getUnitForUnmarshalRawData(obx)
 				if err != nil {
 					fmt.Println("failed to get unit for unmarshalRawData")
-					return labDatas, err
+					return labDatas, nil, err
 				}
 
 				completedDate, err := getCompleteDateForUnmarshalRawData(obr, obx)
 				if err != nil {
 					fmt.Println("failed to get completed date for unmarshalRawData")
-					return labDatas, err
+					return labDatas, nil, err
 				}
 
 				labData := &model.LabData{
@@ -88,7 +92,7 @@ func (d *Driver_hl7_231) Unmarshal(rawData string) (labDatas []*model.LabData, e
 		}
 	}
 
-	return labDatas, nil
+	return labDatas, additionalData, nil
 }
 
 // getBarcodeForUnmarshalRawData gets the barcode for unmarshalling the raw data.
@@ -241,9 +245,33 @@ func parseHL7Message(rawMessage string) (*hl7Message, error) {
 			}
 		}
 		message.Segments[segmentName] = append(message.Segments[segmentName], segmentFields)
+
+		// Add ACK segment
+		if segmentName == "MSH" {
+			addAckSegment(message, fields)
+		}
 	}
 
 	return message, nil
+}
+
+// addAckSegment adds the ACK segment to the HL7 message.
+func addAckSegment(message *hl7Message, fields []string) {
+	ackSegment := "MSH"
+	fieldDefinitions := getFieldDefinitions("MSH")
+	msgControlID := ""
+	for i, fieldName := range fieldDefinitions {
+		if fieldName == "Message Type" {
+			ackSegment += "|ACK"
+			continue
+		}
+		if fieldName == "Message Control ID" {
+			msgControlID = fields[i+1]
+		}
+		ackSegment += "|" + fields[i+1]
+	}
+	ackSegment += "\rMSA|AA|" + msgControlID + "\r"
+	message.Segments["ACK"] = []map[string]interface{}{{"ACK": ackSegment}}
 }
 
 // parseDelimiters parses the delimiters of MSH segment.

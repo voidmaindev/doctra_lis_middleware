@@ -46,7 +46,12 @@ func (d *driver_text_humalyzer_primus_human) DataToBeReplaced() map[string]strin
 	return map[string]string{}
 }
 
-// SendACK sends an ACK message.
-func (d *driver_text_humalyzer_primus_human) SendACK(conn net.Conn) error {
+// SendSimpleACK sends an ACK message.
+func (d *driver_text_humalyzer_primus_human) SendSimpleACK(conn net.Conn) error {
+	return nil
+}
+
+// PostUnmarshalACtions performs post-unmarshal actions.
+func (d *driver_text_humalyzer_primus_human) PostUnmarshalACtions(conn net.Conn, data map[string]interface{}) error {
 	return nil
 }

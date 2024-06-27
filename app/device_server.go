@@ -162,7 +162,7 @@ func processDeviceMessage(deviceMsg []byte, conn *tcp.ConnData, device *model.De
 		return err
 	}
 
-	err = deviceDriver.SendACK(conn.Conn)
+	err = deviceDriver.SendSimpleACK(conn.Conn)
 	if err != nil {
 		log.Err(err, "failed to send an ACK message to "+device.Name)
 		return err
@@ -183,7 +183,7 @@ func processDeviceMessage(deviceMsg []byte, conn *tcp.ConnData, device *model.De
 			Processed:  true,
 		}
 
-		labDatas, err := deviceDriver.Unmarshal(rawData)
+		labDatas, additionalData, err := deviceDriver.Unmarshal(rawData)
 		if err != nil {
 			deviceDriver.Log().Error("failed to unmarshal a raw data from " + device.Name)
 			rd.Processed = false
@@ -204,6 +204,10 @@ func processDeviceMessage(deviceMsg []byte, conn *tcp.ConnData, device *model.De
 				deviceDriver.Log().Error(fmt.Sprintf("failed to create a lab data from %s with barcode %s and index %d", device.Name, labData.Barcode, labData.Index))
 				rd.Processed = false
 				continue
+			}
+
+			if rd.Processed {
+				deviceDriver.PostUnmarshalACtions(conn.Conn, additionalData)
 			}
 		}
 	}

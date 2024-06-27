@@ -16,7 +16,7 @@ const (
 )
 
 // Unmarshal unmarshals the raw data to the lab data.
-func (d *Driver_astm) Unmarshal(rawData string) (labDatas []*model.LabData, err error) {
+func (d *Driver_astm) Unmarshal(rawData string) (labDatas []*model.LabData, additionalData map[string]interface{}, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			if err, ok := r.(error); ok {
@@ -35,7 +35,7 @@ func (d *Driver_astm) Unmarshal(rawData string) (labDatas []*model.LabData, err 
 		barcode, err := getBarcodeForUnmarshalRawData(astm_msg)
 		if err != nil {
 			fmt.Println("failed to get barcode for unmarshalRawData")
-			return labDatas, err
+			return labDatas, nil, err
 		}
 
 		index := 0
@@ -49,31 +49,31 @@ func (d *Driver_astm) Unmarshal(rawData string) (labDatas []*model.LabData, err 
 			index, err := getIndexForUnmarshalRawData(index)
 			if err != nil {
 				fmt.Println("failed to get index for unmarshalRawData")
-				return labDatas, err
+				return labDatas, nil, err
 			}
 
 			param, err := getParamForUnmarshalRawData(result)
 			if err != nil {
 				fmt.Println("failed to get param for unmarshalRawData")
-				return labDatas, err
+				return labDatas, nil, err
 			}
 
 			res, err := getResultForUnmarshalRawData(result)
 			if err != nil {
 				fmt.Println("failed to get result for unmarshalRawData")
-				return labDatas, err
+				return labDatas, nil, err
 			}
 
 			unit, err := getUnitForUnmarshalRawData(result)
 			if err != nil {
 				fmt.Println("failed to get unit for unmarshalRawData")
-				return labDatas, err
+				return labDatas, nil, err
 			}
 
 			completedDate, err := getCompleteDateForUnmarshalRawData(result)
 			if err != nil {
 				fmt.Println("failed to get completed date for unmarshalRawData")
-				return labDatas, err
+				return labDatas, nil, err
 			}
 
 			labData := &model.LabData{
@@ -89,7 +89,7 @@ func (d *Driver_astm) Unmarshal(rawData string) (labDatas []*model.LabData, err 
 		}
 	}
 
-	return labDatas, nil
+	return labDatas, additionalData, nil
 }
 
 // getBarcodeForUnmarshalRawData gets the barcode for unmarshalling the raw data.

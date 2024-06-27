@@ -54,12 +54,17 @@ func (d *Driver_astm) DataToBeReplaced() map[string]string {
 	return map[string]string{"\r": "", "\n": ""}
 }
 
-// SendACK sends an ACK message.
-func (d *Driver_astm) SendACK(conn net.Conn) error {
+// SendSimpleACK sends an ACK message.
+func (d *Driver_astm) SendSimpleACK(conn net.Conn) error {
 	_, err := conn.Write([]byte{ack})
 	if err != nil {
 		return err
 	}
 
+	return nil
+}
+
+// PostUnmarshalACtions performs the post-unmarshal actions.
+func (d *Driver_astm) PostUnmarshalACtions(conn net.Conn, data map[string]interface{}) error {
 	return nil
 }
