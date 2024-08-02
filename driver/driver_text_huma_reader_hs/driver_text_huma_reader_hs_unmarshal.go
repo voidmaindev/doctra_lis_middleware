@@ -73,7 +73,7 @@ func (d *driver_text_huma_reader_hs) Unmarshal(rawData string) (labDatas []*mode
 			return labDatas, nil, err
 		}
 
-		unit, err := getUnitForUnmarshalRawData(parts)
+		unit, err := getUnitForUnmarshalRawData()
 		if err != nil {
 			fmt.Println("failed to get unit for unmarshalRawData")
 			return labDatas, nil, err
@@ -129,7 +129,7 @@ func getResultForUnmarshalRawData(parts []string) (string, error) {
 }
 
 // getUnitForUnmarshalRawData gets the unit for unmarshalling the raw data.
-func getUnitForUnmarshalRawData(parts []string) (string, error) {
+func getUnitForUnmarshalRawData() (string, error) {
 	unit := ""
 
 	return unit, nil
