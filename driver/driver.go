@@ -9,6 +9,7 @@ import (
 	"github.com/voidmaindev/doctra_lis_middleware/driver/driver_astm"
 	"github.com/voidmaindev/doctra_lis_middleware/driver/driver_hl7_231"
 	"github.com/voidmaindev/doctra_lis_middleware/driver/driver_text_combilyzer_13_Human"
+	"github.com/voidmaindev/doctra_lis_middleware/driver/driver_text_huma_reader_hs"
 	"github.com/voidmaindev/doctra_lis_middleware/driver/driver_text_humalyzer_primus_human"
 	"github.com/voidmaindev/doctra_lis_middleware/log"
 	"github.com/voidmaindev/doctra_lis_middleware/model"
@@ -25,7 +26,7 @@ type Driver interface {
 	DataToBeReplaced() map[string]string
 	Unmarshal(string) ([]*model.LabData, map[string]interface{}, error)
 	SendSimpleACK(net.Conn) error
-	PostUnmarshalACtions(net.Conn, map[string]interface{}) error
+	PostUnmarshalActions(net.Conn, map[string]interface{}) error
 }
 
 // NewDriver creates a new driver.
@@ -41,6 +42,8 @@ func NewDriver(driverName string, logger *log.Logger, store *store.Store) (Drive
 		return driver_text_combilyzer_13_Human.NewDriver(logger, store), nil
 	case "texthumalyzerprimushuman":
 		return driver_text_humalyzer_primus_human.NewDriver(logger, store), nil
+	case "texthumareaderhs":
+		return driver_text_huma_reader_hs.NewDriver(logger, store), nil
 	}
 
 	return nil, fmt.Errorf("unknown driver: %s", driverName)
@@ -66,6 +69,7 @@ func Drivers() []string {
 		"astm",
 		"text_combilyzer_13_human",
 		"text_humalyzer_primus_human",
+		"text_huma_reader_hs",
 	}
 }
 

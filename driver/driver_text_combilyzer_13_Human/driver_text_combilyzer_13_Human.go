@@ -58,7 +58,7 @@ func (d *Driver_text_Combilyzer_13_Human) SendSimpleACK(conn net.Conn) error {
 	return nil
 }
 
-// PostUnmarshalACtions performs the post-unmarshal actions.
-func (d *Driver_text_Combilyzer_13_Human) PostUnmarshalACtions(conn net.Conn, data map[string]interface{}) error {
+// PostUnmarshalActions performs the post-unmarshal actions.
+func (d *Driver_text_Combilyzer_13_Human) PostUnmarshalActions(conn net.Conn, data map[string]interface{}) error {
 	return nil
 }

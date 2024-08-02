@@ -207,7 +207,7 @@ func processDeviceMessage(deviceMsg []byte, conn *tcp.ConnData, device *model.De
 			}
 
 			if rd.Processed {
-				deviceDriver.PostUnmarshalACtions(conn.Conn, additionalData)
+				deviceDriver.PostUnmarshalActions(conn.Conn, additionalData)
 			}
 		}
 	}

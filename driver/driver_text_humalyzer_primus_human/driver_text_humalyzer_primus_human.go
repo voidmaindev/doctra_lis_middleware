@@ -7,6 +7,11 @@ import (
 	"github.com/voidmaindev/doctra_lis_middleware/store"
 )
 
+const (
+	rawDataStartString = ""
+	rawDataEndString   = "TRANSFER FINISH"
+)
+
 // driver_text_humalyzer_primus_human is the driver for the "HumaLyzer Primus Human" laboratory device data format.
 type driver_text_humalyzer_primus_human struct {
 	log   *log.Logger
@@ -33,12 +38,12 @@ func (d *driver_text_humalyzer_primus_human) Store() *store.Store {
 
 // RawDataStartString returns the start string of the raw data.
 func (d *driver_text_humalyzer_primus_human) RawDataStartString() string {
-	return ""
+	return rawDataStartString
 }
 
 // RawDataEndString returns the end string of the raw data.
 func (d *driver_text_humalyzer_primus_human) RawDataEndString() string {
-	return "TRANSFER FINISH"
+	return rawDataEndString
 }
 
 // DataToBeReplaced returns the data to be replaced.
@@ -51,7 +56,7 @@ func (d *driver_text_humalyzer_primus_human) SendSimpleACK(conn net.Conn) error 
 	return nil
 }
 
-// PostUnmarshalACtions performs post-unmarshal actions.
-func (d *driver_text_humalyzer_primus_human) PostUnmarshalACtions(conn net.Conn, data map[string]interface{}) error {
+// PostUnmarshalActions performs post-unmarshal actions.
+func (d *driver_text_humalyzer_primus_human) PostUnmarshalActions(conn net.Conn, data map[string]interface{}) error {
 	return nil
 }

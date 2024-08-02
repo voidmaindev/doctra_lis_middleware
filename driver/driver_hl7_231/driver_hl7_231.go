@@ -58,8 +58,8 @@ func (d *Driver_hl7_231) SendSimpleACK(conn net.Conn) error {
 	return nil
 }
 
-// PostUnmarshalACtions performs the post-unmarshal actions.
-func (d *Driver_hl7_231) PostUnmarshalACtions(conn net.Conn, data map[string]interface{}) error {
+// PostUnmarshalActions performs the post-unmarshal actions.
+func (d *Driver_hl7_231) PostUnmarshalActions(conn net.Conn, data map[string]interface{}) error {
 	// Send ACK
 	if ackMsg, ok := data["ACK"]; ok {
 		_, err := conn.Write([]byte(ackMsg.(string)))

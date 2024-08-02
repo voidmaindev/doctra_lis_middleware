@@ -64,7 +64,7 @@ func (d *Driver_astm) SendSimpleACK(conn net.Conn) error {
 	return nil
 }
 
-// PostUnmarshalACtions performs the post-unmarshal actions.
-func (d *Driver_astm) PostUnmarshalACtions(conn net.Conn, data map[string]interface{}) error {
+// PostUnmarshalActions performs the post-unmarshal actions.
+func (d *Driver_astm) PostUnmarshalActions(conn net.Conn, data map[string]interface{}) error {
 	return nil
 }
