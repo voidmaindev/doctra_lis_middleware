@@ -125,10 +125,7 @@ func getParamForUnmarshalRawData(parts []string) (string, error) {
 
 // getResultForUnmarshalRawData gets the result for unmarshalling the raw data.
 func getResultForUnmarshalRawData(parts []string) (string, error) {
-	result := parts[9]
-	if result == "X" {
-		result = parts[8]
-	}
+	result := parts[8]
 
 	return result, nil
 }
