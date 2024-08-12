@@ -23,7 +23,7 @@ func (d *driver_text_huma_reader_hs) Unmarshal(rawData string) (labDatas []*mode
 		}
 	}()
 
-	lines := strings.Split(rawData, "B")
+	lines := strings.Split(rawData, "B,")
 	for _, line := range lines {
 		if strings.TrimSpace(line) == "" {
 			lines = lines[1:]
@@ -38,7 +38,7 @@ func (d *driver_text_huma_reader_hs) Unmarshal(rawData string) (labDatas []*mode
 		return labDatas, nil, err
 	}
 
-	for i, line := range lines {
+	for _, line := range lines {
 		line = strings.TrimSpace(line)
 		if line == "" {
 			continue
@@ -55,7 +55,7 @@ func (d *driver_text_huma_reader_hs) Unmarshal(rawData string) (labDatas []*mode
 			return labDatas, nil, err
 		}
 
-		index, err := getIndexForUnmarshalRawData(i)
+		index, err := getIndexForUnmarshalRawData()
 		if err != nil {
 			fmt.Println("failed to get index for unmarshalRawData")
 			return labDatas, nil, err
@@ -96,33 +96,38 @@ func (d *driver_text_huma_reader_hs) Unmarshal(rawData string) (labDatas []*mode
 
 // getBarcodeForUnmarshalRawData gets the barcode for unmarshalling the raw data.
 func getBarcodeForUnmarshalRawData(parts []string) (string, error) {
-	barcode := parts[1]
+	// barcode := parts[1] + strconv.Itoa(int(parts[2][0]-'A')) + parts[2][1:]
+	barcode := parts[0] + parts[7]
 
 	return barcode, nil
 }
 
 // getCompleteDateForUnmarshalRawData gets the completed date for unmarshalling the raw data.
 func getCompleteDateForUnmarshalRawData() (time.Time, error) {
-	return time.Now(), nil
+	completedDate := time.Now()
+
+	return completedDate, nil
 }
 
 // getIndexForUnmarshalRawData gets the index for unmarshalling the raw data.
-func getIndexForUnmarshalRawData(i int) (uint, error) {
-	return uint(i + 1), nil
+func getIndexForUnmarshalRawData() (uint, error) {
+	index := uint(1)
+
+	return index, nil
 }
 
 // getParamForUnmarshalRawData gets the param for unmarshalling the raw data.
 func getParamForUnmarshalRawData(parts []string) (string, error) {
-	param := parts[4]
+	param := parts[3]
 
 	return param, nil
 }
 
 // getResultForUnmarshalRawData gets the result for unmarshalling the raw data.
 func getResultForUnmarshalRawData(parts []string) (string, error) {
-	result := parts[10]
+	result := parts[9]
 	if result == "X" {
-		result = parts[9]
+		result = parts[8]
 	}
 
 	return result, nil
