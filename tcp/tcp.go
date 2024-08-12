@@ -85,7 +85,7 @@ func (t *TCP) ReadMessages(conn net.Conn) {
 
 	defer func() {
 		conn.Close()
-		delete(t.Conns, connString)
+		// delete(t.Conns, connString)
 		t.Log.Info(fmt.Sprintf("connection from %s closed", connString))
 	}()
 
@@ -93,7 +93,8 @@ func (t *TCP) ReadMessages(conn net.Conn) {
 		n, err := conn.Read(buf)
 		if err != nil {
 			// if err == net.ErrClosed || err == io.EOF || err.Error() == "EOF" {
-			t.Log.Info(fmt.Sprintf("connection from %s closed", connString))
+			t.Log.Err(err, fmt.Sprintf("connection from %s closed", connString))
+			// t.Log.Info(fmt.Sprintf("connection from %s closed", connString))
 			return
 			// }
 
