@@ -13,6 +13,7 @@ type DBSettings struct {
 	DBName         string
 	CreateDB       bool
 	CreateDefAdmin bool
+	QueryHost      string
 }
 
 // ReadLogConfig reads the log configuration file

@@ -31,6 +31,11 @@ func (d *Driver_astm) Unmarshal(rawData string) (labDatas []*model.LabData, addi
 
 	astm_msgs := parseASTMMessages(rawData)
 
+	if isQuery, qMsg := isQueryMessage(astm_msgs); isQuery {
+		additionalData = map[string]interface{}{queryName: true, "sample_id": qMsg.SampleID, "test_id": qMsg.TestID}
+		return labDatas, additionalData, nil
+	}
+
 	for _, astm_msg := range astm_msgs {
 		barcode, err := getBarcodeForUnmarshalRawData(astm_msg)
 		if err != nil {
@@ -196,12 +201,29 @@ type Termination struct {
 
 // Message represents a parsed message from the communication
 type Message struct {
-	Header   Header
-	Patient  Patient
-	Order    Order
-	Results  []Result
-	Comments []Comment
-	Term     Termination
+	Header       Header
+	Patient      Patient
+	Order        Order
+	Results      []Result
+	Comments     []Comment
+	Term         Termination
+	Query        Query
+	Notification Notification
+}
+
+// Query represents the query/request segment (Q)
+type Query struct {
+	Type      string
+	QueryType string
+	SampleID  string
+	TestID    string
+}
+
+// Notification represents the notification segment (N)
+type Notification struct {
+	Type             string
+	NotificationType string
+	Details          string
 }
 
 // parseASTMMessages parses the raw data into a slice of structured messages
@@ -246,6 +268,10 @@ func parseASTMMessages(data string) []Message {
 				comments = append(comments, parseComment(content))
 			case "L":
 				currentMessage.Term = parseTermination(content)
+			case "Q":
+				currentMessage.Query = parseQuery(content)
+			case "N":
+				currentMessage.Notification = parseNotification(content)
 			}
 		}
 	}
@@ -330,4 +356,35 @@ func parseTermination(content string) Termination {
 		Type:            "L",
 		TerminationCode: parts[1],
 	}
+}
+
+// parseQuery parses the query segment (Q)
+func parseQuery(content string) Query {
+	parts := strings.Split(content, "|")
+	return Query{
+		Type:      "Q",
+		QueryType: parts[1],
+		SampleID:  parts[2],
+		TestID:    parts[3],
+	}
+}
+
+// parseNotification parses the notification segment (N)
+func parseNotification(content string) Notification {
+	parts := strings.Split(content, "|")
+	return Notification{
+		Type:             "N",
+		NotificationType: parts[1],
+		Details:          parts[2],
+	}
+}
+
+// isQueryMessage checks if the message is a query message
+func isQueryMessage(messages []Message) (bool, *Query) {
+	for _, msg := range messages {
+		if msg.Query.Type == "Q" {
+			return true, &msg.Query
+		}
+	}
+	return false, nil
 }

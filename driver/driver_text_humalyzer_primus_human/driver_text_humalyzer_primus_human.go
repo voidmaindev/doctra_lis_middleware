@@ -4,6 +4,7 @@ import (
 	"net"
 
 	"github.com/voidmaindev/doctra_lis_middleware/log"
+	"github.com/voidmaindev/doctra_lis_middleware/services"
 	"github.com/voidmaindev/doctra_lis_middleware/store"
 )
 
@@ -14,15 +15,17 @@ const (
 
 // driver_text_humalyzer_primus_human is the driver for the "HumaLyzer Primus Human" laboratory device data format.
 type driver_text_humalyzer_primus_human struct {
-	log   *log.Logger
-	store *store.Store
+	log                *log.Logger
+	store              *store.Store
+	deviceQueryService *services.DeviceQueryService
 }
 
 // NewDriver creates a new "Text HumaLyzer Primus Human" driver.
-func NewDriver(logger *log.Logger, store *store.Store) *driver_text_humalyzer_primus_human {
+func NewDriver(logger *log.Logger, store *store.Store, deviceQueryService *services.DeviceQueryService) *driver_text_humalyzer_primus_human {
 	return &driver_text_humalyzer_primus_human{
-		log:   logger,
-		store: store,
+		log:                logger,
+		store:              store,
+		deviceQueryService: deviceQueryService,
 	}
 }
 

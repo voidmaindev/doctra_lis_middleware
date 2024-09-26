@@ -5,6 +5,7 @@ import (
 	"net"
 
 	"github.com/voidmaindev/doctra_lis_middleware/log"
+	"github.com/voidmaindev/doctra_lis_middleware/services"
 	"github.com/voidmaindev/doctra_lis_middleware/store"
 )
 
@@ -13,19 +14,22 @@ const (
 	rawDataEndString    = 0x04
 	completedDateFormat = "20060102150405"
 	ack                 = 0x06
+	queryName           = "QRY"
 )
 
 // Driver_astm is the driver for the "ASTM" laboratory device data format.
 type Driver_astm struct {
-	log   *log.Logger
-	store *store.Store
+	log                *log.Logger
+	store              *store.Store
+	deviceQueryService *services.DeviceQueryService
 }
 
 // NewDriver creates a new "ASTM" driver.
-func NewDriver(logger *log.Logger, store *store.Store) *Driver_astm {
+func NewDriver(logger *log.Logger, store *store.Store, deviceQueryService *services.DeviceQueryService) *Driver_astm {
 	return &Driver_astm{
-		log:   logger,
-		store: store,
+		log:                logger,
+		store:              store,
+		deviceQueryService: deviceQueryService,
 	}
 }
 
@@ -66,5 +70,27 @@ func (d *Driver_astm) SendSimpleACK(conn net.Conn) error {
 
 // PostUnmarshalActions performs the post-unmarshal actions.
 func (d *Driver_astm) PostUnmarshalActions(conn net.Conn, data map[string]interface{}) error {
+	err := d.doQuery(conn, data)
+	if err != nil {
+		d.log.Error("failed to do the query action")
+		return err
+	}
+
 	return nil
+}
+
+// doQuery does the query action if the message is a query message.
+func (d *Driver_astm) doQuery(conn net.Conn, data map[string]interface{}) error {
+	query, ok := data[queryName]
+	if !ok {
+		return nil
+	}
+
+	dataToReturn, err := d.deviceQueryService.Query(query.(Query).SampleID)
+	if err != nil {
+		d.log.Error("failed to query the service")
+		return err
+	}
+
+	// conn.Write([]byte(query.SampleID))
 }

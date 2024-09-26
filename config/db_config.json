@@ -6,5 +6,6 @@
   "Port": "1433",
   "DBName": "DoctraLisMiddleware",
   "CreateDB": true,
-  "CreateDefAdmin": true
+  "CreateDefAdmin": true,
+  "QueryHost": "http://localhost/html_data/hs/html_data/v1/innotech"
 }

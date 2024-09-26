@@ -5,6 +5,7 @@ import (
 	"net"
 
 	"github.com/voidmaindev/doctra_lis_middleware/log"
+	"github.com/voidmaindev/doctra_lis_middleware/services"
 	"github.com/voidmaindev/doctra_lis_middleware/store"
 )
 
@@ -16,15 +17,17 @@ const (
 
 // Driver_hl7_231 is the driver for the "HL7 2.3.1" laboratory device data format.
 type Driver_hl7_231 struct {
-	log   *log.Logger
-	store *store.Store
+	log                *log.Logger
+	store              *store.Store
+	deviceQueryService *services.DeviceQueryService
 }
 
 // NewDriver creates a new "HL7 2.3.1" driver.
-func NewDriver(logger *log.Logger, store *store.Store) *Driver_hl7_231 {
+func NewDriver(logger *log.Logger, store *store.Store, deviceQueryService *services.DeviceQueryService) *Driver_hl7_231 {
 	return &Driver_hl7_231{
-		log:   logger,
-		store: store,
+		log:                logger,
+		store:              store,
+		deviceQueryService: deviceQueryService,
 	}
 }
 

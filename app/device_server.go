@@ -9,6 +9,7 @@ import (
 	"github.com/voidmaindev/doctra_lis_middleware/driver"
 	"github.com/voidmaindev/doctra_lis_middleware/log"
 	"github.com/voidmaindev/doctra_lis_middleware/model"
+	"github.com/voidmaindev/doctra_lis_middleware/services"
 	"github.com/voidmaindev/doctra_lis_middleware/store"
 	"github.com/voidmaindev/doctra_lis_middleware/tcp"
 )
@@ -146,7 +147,7 @@ func (a *DeviceServerApplication) ManageMessages() {
 			continue
 		}
 
-		err = processDeviceMessage(msg.Data, conn, device, a.Log, a.Store)
+		err = a.processDeviceMessage(msg.Data, conn, device, a.Log, a.Store)
 		if err != nil {
 			a.Log.Error("failed to process the device message")
 			continue
@@ -155,8 +156,16 @@ func (a *DeviceServerApplication) ManageMessages() {
 }
 
 // processDeviceMessage processes the device message.
-func processDeviceMessage(deviceMsg []byte, conn *tcp.ConnData, device *model.Device, log *log.Logger, store *store.Store) error {
-	deviceDriver, err := driver.NewDriver(device.DeviceModel.Driver, log, store)
+func (a *DeviceServerApplication) processDeviceMessage(deviceMsg []byte, conn *tcp.ConnData, device *model.Device, log *log.Logger, store *store.Store) error {
+	device, err := store.DeviceStore.GetByID(device.ID)
+	if err != nil {
+		log.Error("failed to get a device by ID: " + fmt.Sprint(device.ID))
+		return err
+	}
+
+	deviceQueryService := services.NewDeviceQueryService(a.Config.DBSettings.QueryHost, device.Serial)
+	
+	deviceDriver, err := driver.NewDriver(device.DeviceModel.Driver, log, store, deviceQueryService)
 	if err != nil {
 		log.Error(fmt.Sprintf("failed to create a driver for %s with driver name %s", device.Name, device.DeviceModel.Driver))
 		return err

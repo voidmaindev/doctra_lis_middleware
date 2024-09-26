@@ -5,6 +5,7 @@ import (
 	"net"
 
 	"github.com/voidmaindev/doctra_lis_middleware/log"
+	"github.com/voidmaindev/doctra_lis_middleware/services"
 	"github.com/voidmaindev/doctra_lis_middleware/store"
 )
 
@@ -16,15 +17,17 @@ const (
 
 // Driver_text_Combilyzer_13_Human is the driver for the "Combilyzer 13 Human" laboratory device data format.
 type Driver_text_Combilyzer_13_Human struct {
-	log   *log.Logger
-	store *store.Store
+	log                *log.Logger
+	store              *store.Store
+	deviceQueryService *services.DeviceQueryService
 }
 
 // NewDriver creates a new "Text Combilyzer 13 Human" driver.
-func NewDriver(logger *log.Logger, store *store.Store) *Driver_text_Combilyzer_13_Human {
+func NewDriver(logger *log.Logger, store *store.Store, deviceQueryService *services.DeviceQueryService) *Driver_text_Combilyzer_13_Human {
 	return &Driver_text_Combilyzer_13_Human{
-		log:   logger,
-		store: store,
+		log:                logger,
+		store:              store,
+		deviceQueryService: deviceQueryService,
 	}
 }
 

@@ -13,6 +13,7 @@ import (
 	"github.com/voidmaindev/doctra_lis_middleware/driver/driver_text_humalyzer_primus_human"
 	"github.com/voidmaindev/doctra_lis_middleware/log"
 	"github.com/voidmaindev/doctra_lis_middleware/model"
+	"github.com/voidmaindev/doctra_lis_middleware/services"
 	"github.com/voidmaindev/doctra_lis_middleware/store"
 	"github.com/voidmaindev/doctra_lis_middleware/tcp"
 )
@@ -30,20 +31,20 @@ type Driver interface {
 }
 
 // NewDriver creates a new driver.
-func NewDriver(driverName string, logger *log.Logger, store *store.Store) (Driver, error) {
+func NewDriver(driverName string, logger *log.Logger, store *store.Store, deviceQueryService *services.DeviceQueryService) (Driver, error) {
 	normalizedDriverName := normalizeDriverName(driverName)
 
 	switch normalizedDriverName {
 	case "hl7231":
-		return driver_hl7_231.NewDriver(logger, store), nil
+		return driver_hl7_231.NewDriver(logger, store, deviceQueryService), nil
 	case "astm":
-		return driver_astm.NewDriver(logger, store), nil
+		return driver_astm.NewDriver(logger, store, deviceQueryService), nil
 	case "textcombilyzer13human":
-		return driver_text_combilyzer_13_Human.NewDriver(logger, store), nil
+		return driver_text_combilyzer_13_Human.NewDriver(logger, store, deviceQueryService), nil
 	case "texthumalyzerprimushuman":
-		return driver_text_humalyzer_primus_human.NewDriver(logger, store), nil
+		return driver_text_humalyzer_primus_human.NewDriver(logger, store, deviceQueryService), nil
 	case "texthumareaderhs":
-		return driver_text_huma_reader_hs.NewDriver(logger, store), nil
+		return driver_text_huma_reader_hs.NewDriver(logger, store, deviceQueryService), nil
 	}
 
 	return nil, fmt.Errorf("unknown driver: %s", driverName)
