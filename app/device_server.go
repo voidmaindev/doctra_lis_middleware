@@ -164,22 +164,26 @@ func (a *DeviceServerApplication) processDeviceMessage(deviceMsg []byte, conn *t
 	}
 
 	deviceQueryService := services.NewDeviceQueryService(a.Config.DBSettings.QueryHost, device.Serial)
-	
+
 	deviceDriver, err := driver.NewDriver(device.DeviceModel.Driver, log, store, deviceQueryService)
 	if err != nil {
 		log.Error(fmt.Sprintf("failed to create a driver for %s with driver name %s", device.Name, device.DeviceModel.Driver))
 		return err
 	}
 
+	msg := string(deviceMsg)
+	for k, v := range deviceDriver.DataToBeReplaced() {
+		msg = strings.ReplaceAll(msg, k, v)
+	}
+
+	if deviceDriver.ReceivedSimpleACK(msg) {
+		return nil
+	}
+
 	err = deviceDriver.SendSimpleACK(conn.Conn)
 	if err != nil {
 		log.Err(err, "failed to send an ACK message to "+device.Name)
 		return err
-	}
-
-	msg := string(deviceMsg)
-	for k, v := range deviceDriver.DataToBeReplaced() {
-		msg = strings.ReplaceAll(msg, k, v)
 	}
 
 	rawDatas := driver.GetRawDatas(deviceDriver, msg, conn.PrevData)

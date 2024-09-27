@@ -7,12 +7,15 @@ import (
 	"time"
 
 	"github.com/voidmaindev/doctra_lis_middleware/model"
+	"github.com/voidmaindev/doctra_lis_middleware/services"
 )
 
 const (
 	stx = "\x02"
 	etb = "\x17"
 	etx = "\x03"
+	cr  = "\x0D"
+	lf  = "\x0A"
 )
 
 // Unmarshal unmarshals the raw data to the lab data.
@@ -32,7 +35,11 @@ func (d *Driver_astm) Unmarshal(rawData string) (labDatas []*model.LabData, addi
 	astm_msgs := parseASTMMessages(rawData)
 
 	if isQuery, qMsg := isQueryMessage(astm_msgs); isQuery {
-		additionalData = map[string]interface{}{queryName: true, "sample_id": qMsg.SampleID, "test_id": qMsg.TestID}
+		additionalData = map[string]interface{}{queryName: true,
+			queryMessagesName: astm_msgs,
+			"sample_id":       qMsg.SampleID,
+			"test_id":         qMsg.TestID,
+		}
 		return labDatas, additionalData, nil
 	}
 
@@ -387,4 +394,75 @@ func isQueryMessage(messages []Message) (bool, *Query) {
 		}
 	}
 	return false, nil
+}
+
+// QueryAnswerOrder represents the structure of the query answer order
+type QueryAnswerOrder struct {
+	ID        string
+	PatientID string
+	Param     string
+	Priority  string
+	Report    string
+}
+
+// formatQueryAnswerOrderMessage formats the structured QueryAnswerOrder message
+func formatQueryAnswerOrderMessage(order QueryAnswerOrder) string {
+	return stx + fmt.Sprintf("O|%s|%s||^^^%s^\\^^^555|%s||||||%s||||||||||||||O\\Q",
+		order.ID,
+		order.PatientID,
+		order.Param,
+		order.Priority,
+		order.Report,
+	) + cr + string(etx) + cr + lf
+}
+
+// generateASTMMessagesFromQuery formats the queryMessages and appends data from dataToReturn
+func generateASTMMessagesFromQuery(queryMessages []Message, dataToReturn []services.DeviceQueryDataToReturn) []string {
+	var formattedMessages []string
+
+	// Loop over queryMessages and format them
+	for _, msg := range queryMessages {
+		var formattedMsg string
+
+		// Handle different message types
+		switch msg.Header.Type {
+		case "H": // Header
+			formattedMsg = fmt.Sprintf("H|\\^&|%s|%s|%s|%s|%s",
+				msg.Header.Sender,
+				msg.Header.Receiver,
+				msg.Header.AnalyzerType,
+				msg.Header.Version,
+				msg.Header.Timestamp,
+			)
+		case "P": // Patient
+			formattedMsg = fmt.Sprintf("P|%s", msg.Patient.ID)
+		case "Q": // Query
+			for i, data := range dataToReturn {
+				order := QueryAnswerOrder{
+					ID:        fmt.Sprintf("%d", i+1),
+					PatientID: msg.Query.SampleID,
+					Param:     data.Param,
+					Priority:  "R",
+					Report:    "A",
+				}
+				formattedMessages = append(formattedMessages, formatQueryAnswerOrderMessage(order))
+			}
+
+		case "C": // Comments
+			for _, comment := range msg.Comments {
+				formattedMsg = fmt.Sprintf("C|%s", comment.Comment)
+				formattedMessages = append(formattedMessages, stx+formattedMsg+cr+lf)
+			}
+		case "L": // Termination
+			formattedMsg = fmt.Sprintf("L|%s", msg.Term.TerminationCode)
+		}
+
+		// Add STX and ETX framing
+		if formattedMsg != "" {
+			formattedMsg = stx + formattedMsg + cr + string(etx) + cr + lf
+			formattedMessages = append(formattedMessages, formattedMsg)
+		}
+	}
+
+	return formattedMessages
 }

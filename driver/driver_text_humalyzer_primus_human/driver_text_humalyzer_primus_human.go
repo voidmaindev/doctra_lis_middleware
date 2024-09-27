@@ -59,6 +59,11 @@ func (d *driver_text_humalyzer_primus_human) SendSimpleACK(conn net.Conn) error 
 	return nil
 }
 
+// ReceivedSimpleACK checks if the message is an ACK message.
+func (d *driver_text_humalyzer_primus_human) ReceivedSimpleACK(msg string) bool {
+	return false
+}
+
 // PostUnmarshalActions performs post-unmarshal actions.
 func (d *driver_text_humalyzer_primus_human) PostUnmarshalActions(conn net.Conn, data map[string]interface{}) error {
 	return nil

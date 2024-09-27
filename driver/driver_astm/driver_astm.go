@@ -15,6 +15,7 @@ const (
 	completedDateFormat = "20060102150405"
 	ack                 = 0x06
 	queryName           = "QRY"
+	queryMessagesName   = "MSGS"
 )
 
 // Driver_astm is the driver for the "ASTM" laboratory device data format.
@@ -68,6 +69,11 @@ func (d *Driver_astm) SendSimpleACK(conn net.Conn) error {
 	return nil
 }
 
+// ReceivedSimpleACK checks if the message is an ACK message.
+func (d *Driver_astm) ReceivedSimpleACK(msg string) bool {
+	return msg == string(ack)
+}
+
 // PostUnmarshalActions performs the post-unmarshal actions.
 func (d *Driver_astm) PostUnmarshalActions(conn net.Conn, data map[string]interface{}) error {
 	err := d.doQuery(conn, data)
@@ -86,11 +92,53 @@ func (d *Driver_astm) doQuery(conn net.Conn, data map[string]interface{}) error 
 		return nil
 	}
 
-	dataToReturn, err := d.deviceQueryService.Query(query.(Query).SampleID)
+	barcode := query.(Query).TestID
+
+	dataToReturn, err := d.deviceQueryService.Query(barcode)
 	if err != nil {
 		d.log.Error("failed to query the service")
 		return err
 	}
 
-	// conn.Write([]byte(query.SampleID))
+	queryMessages := data[queryMessagesName].([]Message)
+
+	// Send ENQ (Enquiry)
+	if _, err := conn.Write([]byte(fmt.Sprintf("%c", rawDataStartString))); err != nil {
+		return err
+	}
+
+	// // Wait for ACK from the device
+	// buf := make([]byte, 1)
+	// if _, err := conn.Read(buf); err != nil {
+	// 	return err
+	// }
+	// if string(buf) != ack {
+	// 	return fmt.Errorf("expected ACK from device, got: %v", buf)
+	// }
+
+	// Generate messages based on queryMessages and dataToReturn
+	formattedMessages := generateASTMMessagesFromQuery(queryMessages, dataToReturn)
+
+	// Send the formatted messages over the connection
+	for _, msg := range formattedMessages {
+		// Send the message with STX and ETX framing
+		if _, err := conn.Write([]byte(msg)); err != nil {
+			return err
+		}
+
+		// // Wait for ACK from the device after each message
+		// if _, err := conn.Read(buf); err != nil {
+		// 	return err
+		// }
+		// if string(buf) != ack {
+		// 	return fmt.Errorf("expected ACK after sending message, got: %v", buf)
+		// }
+	}
+
+	// Finally, send EOT (End of Transmission)
+	if _, err := conn.Write([]byte(fmt.Sprintf("%c", rawDataEndString))); err != nil {
+		return err
+	}
+
+	return nil
 }

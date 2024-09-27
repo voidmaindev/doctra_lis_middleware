@@ -59,6 +59,11 @@ func (d *driver_text_huma_reader_hs) SendSimpleACK(conn net.Conn) error {
 	return nil
 }
 
+// ReceivedSimpleACK checks if the message is an ACK message.
+func (d *driver_text_huma_reader_hs) ReceivedSimpleACK(msg string) bool {
+	return false
+}
+
 // PostUnmarshalActions performs post-unmarshal actions.
 func (d *driver_text_huma_reader_hs) PostUnmarshalActions(conn net.Conn, data map[string]interface{}) error {
 	return nil

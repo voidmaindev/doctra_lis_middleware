@@ -27,6 +27,7 @@ type Driver interface {
 	DataToBeReplaced() map[string]string
 	Unmarshal(string) ([]*model.LabData, map[string]interface{}, error)
 	SendSimpleACK(net.Conn) error
+	ReceivedSimpleACK(msg string) bool
 	PostUnmarshalActions(net.Conn, map[string]interface{}) error
 }
 

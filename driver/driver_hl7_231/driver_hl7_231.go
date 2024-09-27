@@ -61,6 +61,11 @@ func (d *Driver_hl7_231) SendSimpleACK(conn net.Conn) error {
 	return nil
 }
 
+// ReceivedSimpleACK checks if the message is a simple ACK message.
+func (d *Driver_hl7_231) ReceivedSimpleACK(msg string) bool {
+	return false
+}
+
 // PostUnmarshalActions performs the post-unmarshal actions.
 func (d *Driver_hl7_231) PostUnmarshalActions(conn net.Conn, data map[string]interface{}) error {
 	// Send ACK
