@@ -151,15 +151,26 @@ type Segment struct {
 
 // Header represents the header segment
 type Header struct {
-	Type           string
-	Sender         string
-	Receiver       string
-	AnalyzerType   string
-	Version        string
-	SequenceNumber string
-	Timestamp      string
-	MessageType    string
-	ProcessingID   string
+	Type               string    // H: Identifies the segment as a Header
+	SenderID           string    // Identifier of the sender (usually the device or lab system)
+	ReceiverID         string    // Identifier of the receiver (usually the host or middleware)
+	SenderName         string    // Full name of the sending entity (device manufacturer or lab name)
+	ReceiverName       string    // Full name of the receiving entity
+	AnalyzerType       string    // Analyzer model type and version
+	Version            string    // ASTM version used for communication
+	ControlID          string    // ID for tracking and logging purposes
+	AccessPassword     string    // Security feature, if applicable
+	SequenceNumber     string    // Sequence number of the message for tracking
+	Timestamp          time.Time // Timestamp of when the message was generated (formatted properly)
+	MessageType        string    // Type of the message (e.g., Real-Time, Query, Response)
+	ProcessingMode     string    // Processing mode (e.g., REAL, SIM for Simulation)
+	ProcessingID       string    // ID indicating if the message is a Test, Production, or Simulation
+	AcknowledgmentCode string    // Code used to indicate acknowledgment status of previous message
+	CharacterSet       string    // Defines character set used in message encoding (e.g., ASCII, UTF-8)
+	SecurityCode       string    // Optional field for security authentication or encryption code
+	SoftwareVersion    string    // Version of the software running on the device
+	ApplicationName    string    // Name of the application (if applicable)
+	FacilityID         string    // Identifier of the facility where the test is being conducted
 }
 
 // Patient represents the patient segment
@@ -216,10 +227,16 @@ type Message struct {
 
 // Query represents the query/request segment (Q)
 type Query struct {
-	Type      string
-	QueryType string
-	SampleID  string
-	TestID    string
+	Type                string    // "Q" identifies the segment as a query
+	QueryType           string    // Type of query (e.g., order request, test query)
+	SampleID            string    // Identifier for the sample being queried
+	TestID              string    // Identifier for the specific test being requested
+	Priority            string    // Priority level of the query (e.g., Routine, STAT)
+	RequestedTimestamp  time.Time // Timestamp of when the query was requested
+	RequestingFacility  string    // Name or ID of the facility making the request
+	RequestingPhysician string    // Name or ID of the requesting physician
+	TestStatus          string    // Status of the test being requested
+	ReasonForQuery      string    // Reason for the query (optional for tracking or auditing)
 }
 
 // Notification represents the notification segment (N)
@@ -291,17 +308,56 @@ func parseASTMMessages(data string) []Message {
 // parseHeader parses the header segment
 func parseHeader(content string) Header {
 	parts := strings.Split(content, "|")
+
+	// Split for sender and receiver names, if applicable
+	senderParts := strings.Split(parts[4], "^")
+	receiverParts := strings.Split(parts[5], "^")
+	analyzerParts := strings.Split(parts[6], "^")
+
+	messageProcessingParts := strings.Split(parts[10], "^") // TSREQ^REAL
+
 	return Header{
-		Type:           "H",
-		Sender:         parts[4],
-		Receiver:       parts[5],
-		AnalyzerType:   strings.Split(parts[6], "^")[0],
-		Version:        parts[6],
-		SequenceNumber: parts[7],
-		Timestamp:      parts[13],
-		MessageType:    parts[10],
-		ProcessingID:   parts[11],
+		Type:               "H",
+		SenderID:           senderParts[0],
+		SenderName:         ifExists(senderParts, 1),
+		ReceiverID:         receiverParts[0],
+		ReceiverName:       ifExists(receiverParts, 1),
+		AnalyzerType:       analyzerParts[0],
+		Version:            ifExists(analyzerParts, 1),
+		ControlID:          parts[8],           // Assuming part[8] is for control tracking/logging
+		AccessPassword:     ifExists(parts, 9), // Assigns password/security, part[9] possibly the missing field
+		SequenceNumber:     parts[7],
+		Timestamp:          parseTimestamp(parts[13]),
+		MessageType:        messageProcessingParts[0],                   // TSREQ or other message type
+		ProcessingMode:     ifExists(messageProcessingParts, 1, "REAL"), // REAL, SIM, etc.
+		ProcessingID:       parts[11],
+		AcknowledgmentCode: ifExists(parts, 12),          // Acknowledgment field if present
+		CharacterSet:       ifExists(parts, 15, "ASCII"), // Default to ASCII if not present
+		SecurityCode:       ifExists(parts, 16),
+		SoftwareVersion:    ifExists(parts, 17),
+		ApplicationName:    ifExists(parts, 18),
+		FacilityID:         ifExists(parts, 19),
 	}
+}
+
+// Helper function to safely extract a value if exists in the slice
+func ifExists(parts []string, idx int, defaults ...string) string {
+	if idx < len(parts) {
+		return parts[idx]
+	}
+	if len(defaults) > 0 {
+		return defaults[0]
+	}
+	return ""
+}
+
+// Helper function to parse timestamp safely
+func parseTimestamp(ts string) time.Time {
+	parsedTime, err := time.Parse("20060102150405", ts)
+	if err != nil {
+		return time.Now() // Fallback to current time in case of parsing error
+	}
+	return parsedTime
 }
 
 // parsePatient parses the patient segment
@@ -364,11 +420,24 @@ func parseTermination(content string) Termination {
 // parseQuery parses the query segment (Q)
 func parseQuery(content string) Query {
 	parts := strings.Split(content, "|")
+
+	// Extract timestamps safely and set defaults if parsing fails
+	timestamp, err := time.Parse("20060102150405", parts[11])
+	if err != nil {
+		timestamp = time.Now() // Default to current time if parsing fails
+	}
+
 	return Query{
-		Type:      "Q",
-		QueryType: parts[1],
-		SampleID:  strings.Trim(parts[2], "^"),
-		TestID:    parts[3],
+		Type:                "Q",                            // Fixed as this is a query segment
+		QueryType:           ifExists(parts, 1),             // Query type (part[1])
+		SampleID:            strings.Trim(parts[2], "^"),    // Sample ID (part[2])
+		TestID:              ifExists(parts, 3),             // Test ID (part[3])
+		Priority:            ifExists(parts, 5, "Routine"),  // Priority (optional, defaults to Routine if not provided)
+		RequestedTimestamp:  timestamp,                      // Parsed timestamp
+		RequestingFacility:  ifExists(parts, 8),             // Requesting facility (optional)
+		RequestingPhysician: ifExists(parts, 9),             // Requesting physician (optional)
+		TestStatus:          ifExists(parts, 10, "Pending"), // Status (defaults to "Pending")
+		ReasonForQuery:      ifExists(parts, 12),            // Reason for the query (optional)
 	}
 }
 
@@ -422,12 +491,24 @@ func generateASTMMessagesFromQuery(queryMessages []Message, dataToReturn []servi
 
 		// Handle different message types
 		if msg.Header.Type == "H" {
-			formattedMsg = fmt.Sprintf("H|\\^&|%s|%s|%s|%s|%s",
-				msg.Header.Sender,
-				msg.Header.Receiver,
-				msg.Header.AnalyzerType,
-				msg.Header.Version,
-				msg.Header.Timestamp,
+			if msg.Header.MessageType == "TSREQ" && msg.Header.ProcessingMode == "REAL" {
+				msg.Header.MessageType = "TSDWN"
+				msg.Header.ProcessingMode = "REPLY"
+			}
+			formattedMsg = fmt.Sprintf("H|\\^&|%s|%s|%s^%s^%s^%s^%s|||||%s|%s^%s|%s|%s|%s",
+				msg.Header.SenderID,                           // ID of the sender
+				msg.Header.ReceiverID,                         // ID of the receiver
+				msg.Header.AnalyzerType,                       // Analyzer type (model)
+				msg.Header.SenderName,                         // Sender name (if present)
+				msg.Header.AnalyzerType,                       // Analyzer type again (if repeated)
+				msg.Header.Version,                            // Version of the analyzer
+				msg.Header.ControlID,                          // Control ID for tracking purposes
+				msg.Header.ReceiverID,                         // Receiver, could be lab host
+				msg.Header.MessageType,                        // TSDWN (Test Shutdown)
+				msg.Header.ProcessingMode,                     // REPLY
+				msg.Header.ProcessingID,                       // Processing ID (e.g., P for production)
+				msg.Header.SequenceNumber,                     // Sequence number of the message
+				msg.Header.Timestamp.Format("20060102150405"), // Timestamp in the correct format
 			)
 			formattedMessages = addFormattedMessage(formattedMessages, formattedMsg)
 		}
@@ -444,7 +525,7 @@ func generateASTMMessagesFromQuery(queryMessages []Message, dataToReturn []servi
 			}
 		}
 
-		// case "C": // Comments
+		// if msg.Query.Type == "C" {
 		// 	for _, comment := range msg.Comments {
 		// 		formattedMsg = fmt.Sprintf("C|%s", comment.Comment)
 		// 		formattedMessages = append(formattedMessages, stx+formattedMsg+cr+lf)
@@ -459,6 +540,19 @@ func generateASTMMessagesFromQuery(queryMessages []Message, dataToReturn []servi
 
 // addFormattedMessage adds the formatted message to the formattedMessages slice
 func addFormattedMessage(formattedMessages []string, formattedMsg string) []string {
-	formattedMsg = stx + formattedMsg + cr + string(etx) + cr + lf
+	checkSum := calculateASTMChecksum(formattedMsg)
+	formattedMsg = formattedMsg + cr + string(etx) + fmt.Sprintf("%02X", checkSum) + cr + lf
+
 	return append(formattedMessages, formattedMsg)
+}
+
+// calculateASTMChecksum calculates the checksum for ASTM protocol
+func calculateASTMChecksum(content string) int {
+	checkSum := 0
+
+	for i := 0; i < len(content); i++ {
+		checkSum ^= int(content[i])
+	}
+
+	return checkSum
 }

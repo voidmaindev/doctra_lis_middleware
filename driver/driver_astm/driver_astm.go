@@ -120,7 +120,8 @@ func (d *Driver_astm) doQuery(conn net.Conn, data map[string]interface{}) error 
 	formattedMessages := generateASTMMessagesFromQuery(queryMessages, dataToReturn)
 
 	// Send the formatted messages over the connection
-	for _, msg := range formattedMessages {
+	for i, msg := range formattedMessages {
+		msg = fmt.Sprintf("%d", i+1) + stx + msg
 		// Send the message with STX and ETX framing
 		if _, err := conn.Write([]byte(msg)); err != nil {
 			return err
