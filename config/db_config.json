@@ -7,5 +7,5 @@
   "DBName": "DoctraLisMiddleware",
   "CreateDB": true,
   "CreateDefAdmin": true,
-  "QueryHost": "http://localhost/html_data/hs/html_data/v1/innotech"
+  "QueryHost": "http://localhost/html_data/hs/html_data/v1/doctramiddleware"
 }

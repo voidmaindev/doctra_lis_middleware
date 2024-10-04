@@ -208,6 +208,11 @@ func (a *DeviceServerApplication) processDeviceMessage(deviceMsg []byte, conn *t
 			return err
 		}
 
+		// TODO: Check if is query
+		if labDatas == nil {
+			deviceDriver.PostUnmarshalActions(conn.Conn, additionalData)
+		}
+
 		for _, labData := range labDatas {
 			labData.RawDataID = rd.ID
 			labData.DeviceID = device.ID

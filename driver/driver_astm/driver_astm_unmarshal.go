@@ -35,11 +35,7 @@ func (d *Driver_astm) Unmarshal(rawData string) (labDatas []*model.LabData, addi
 	astm_msgs := parseASTMMessages(rawData)
 
 	if isQuery, qMsg := isQueryMessage(astm_msgs); isQuery {
-		additionalData = map[string]interface{}{queryName: true,
-			queryMessagesName: astm_msgs,
-			"sample_id":       qMsg.SampleID,
-			"test_id":         qMsg.TestID,
-		}
+		additionalData = map[string]interface{}{queryName: qMsg, queryMessagesName: astm_msgs}
 		return labDatas, additionalData, nil
 	}
 
@@ -371,7 +367,7 @@ func parseQuery(content string) Query {
 	return Query{
 		Type:      "Q",
 		QueryType: parts[1],
-		SampleID:  parts[2],
+		SampleID:  strings.Trim(parts[2], "^"),
 		TestID:    parts[3],
 	}
 }
@@ -407,13 +403,13 @@ type QueryAnswerOrder struct {
 
 // formatQueryAnswerOrderMessage formats the structured QueryAnswerOrder message
 func formatQueryAnswerOrderMessage(order QueryAnswerOrder) string {
-	return stx + fmt.Sprintf("O|%s|%s||^^^%s^\\^^^555|%s||||||%s||||||||||||||O\\Q",
+	return fmt.Sprintf("O|%s|%s||^^^%s^\\^^^555|%s||||||%s||||||||||||||O\\Q",
 		order.ID,
 		order.PatientID,
 		order.Param,
 		order.Priority,
 		order.Report,
-	) + cr + string(etx) + cr + lf
+	)
 }
 
 // generateASTMMessagesFromQuery formats the queryMessages and appends data from dataToReturn
@@ -425,8 +421,7 @@ func generateASTMMessagesFromQuery(queryMessages []Message, dataToReturn []servi
 		var formattedMsg string
 
 		// Handle different message types
-		switch msg.Header.Type {
-		case "H": // Header
+		if msg.Header.Type == "H" {
 			formattedMsg = fmt.Sprintf("H|\\^&|%s|%s|%s|%s|%s",
 				msg.Header.Sender,
 				msg.Header.Receiver,
@@ -434,9 +429,9 @@ func generateASTMMessagesFromQuery(queryMessages []Message, dataToReturn []servi
 				msg.Header.Version,
 				msg.Header.Timestamp,
 			)
-		case "P": // Patient
-			formattedMsg = fmt.Sprintf("P|%s", msg.Patient.ID)
-		case "Q": // Query
+			formattedMessages = addFormattedMessage(formattedMessages, formattedMsg)
+		}
+		if msg.Query.Type == "Q" {
 			for i, data := range dataToReturn {
 				order := QueryAnswerOrder{
 					ID:        fmt.Sprintf("%d", i+1),
@@ -445,24 +440,25 @@ func generateASTMMessagesFromQuery(queryMessages []Message, dataToReturn []servi
 					Priority:  "R",
 					Report:    "A",
 				}
-				formattedMessages = append(formattedMessages, formatQueryAnswerOrderMessage(order))
+				formattedMessages = addFormattedMessage(formattedMessages, formatQueryAnswerOrderMessage(order))
 			}
-
-		case "C": // Comments
-			for _, comment := range msg.Comments {
-				formattedMsg = fmt.Sprintf("C|%s", comment.Comment)
-				formattedMessages = append(formattedMessages, stx+formattedMsg+cr+lf)
-			}
-		case "L": // Termination
-			formattedMsg = fmt.Sprintf("L|%s", msg.Term.TerminationCode)
 		}
 
-		// Add STX and ETX framing
-		if formattedMsg != "" {
-			formattedMsg = stx + formattedMsg + cr + string(etx) + cr + lf
-			formattedMessages = append(formattedMessages, formattedMsg)
+		// case "C": // Comments
+		// 	for _, comment := range msg.Comments {
+		// 		formattedMsg = fmt.Sprintf("C|%s", comment.Comment)
+		// 		formattedMessages = append(formattedMessages, stx+formattedMsg+cr+lf)
+		// 	}
+		if msg.Term.Type == "L" {
+			formattedMessages = addFormattedMessage(formattedMessages, fmt.Sprintf("L|%s|N", msg.Term.TerminationCode))
 		}
 	}
 
 	return formattedMessages
+}
+
+// addFormattedMessage adds the formatted message to the formattedMessages slice
+func addFormattedMessage(formattedMessages []string, formattedMsg string) []string {
+	formattedMsg = stx + formattedMsg + cr + string(etx) + cr + lf
+	return append(formattedMessages, formattedMsg)
 }

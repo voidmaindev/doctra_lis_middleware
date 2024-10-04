@@ -92,7 +92,7 @@ func (d *Driver_astm) doQuery(conn net.Conn, data map[string]interface{}) error 
 		return nil
 	}
 
-	barcode := query.(Query).TestID
+	barcode := query.(*Query).SampleID
 
 	dataToReturn, err := d.deviceQueryService.Query(barcode)
 	if err != nil {
