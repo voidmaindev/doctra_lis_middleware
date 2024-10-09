@@ -102,19 +102,21 @@ func (d *Driver_astm) doQuery(conn net.Conn, data map[string]interface{}) error 
 
 	queryMessages := data[queryMessagesName].([]Message)
 
+	ackStr := fmt.Sprintf("%c", ack)
+
 	// Send ENQ (Enquiry)
 	if _, err := conn.Write([]byte(fmt.Sprintf("%c", rawDataStartString))); err != nil {
 		return err
 	}
 
-	// // Wait for ACK from the device
-	// buf := make([]byte, 1)
-	// if _, err := conn.Read(buf); err != nil {
-	// 	return err
-	// }
-	// if string(buf) != ack {
-	// 	return fmt.Errorf("expected ACK from device, got: %v", buf)
-	// }
+	// Wait for ACK from the device
+	buf := make([]byte, 1)
+	if _, err := conn.Read(buf); err != nil {
+		return err
+	}
+	if string(buf) != ackStr {
+		return fmt.Errorf("expected ACK from device, got: %v", buf)
+	}
 
 	// Generate messages based on queryMessages and dataToReturn
 	formattedMessages := generateASTMMessagesFromQuery(queryMessages, dataToReturn)
@@ -127,13 +129,13 @@ func (d *Driver_astm) doQuery(conn net.Conn, data map[string]interface{}) error 
 			return err
 		}
 
-		// // Wait for ACK from the device after each message
-		// if _, err := conn.Read(buf); err != nil {
-		// 	return err
-		// }
-		// if string(buf) != ack {
-		// 	return fmt.Errorf("expected ACK after sending message, got: %v", buf)
-		// }
+		// Wait for ACK from the device after each message
+		if _, err := conn.Read(buf); err != nil {
+			return err
+		}
+		if string(buf) != ackStr {
+			return fmt.Errorf("expected ACK after sending message, got: %v", buf)
+		}
 	}
 
 	// Finally, send EOT (End of Transmission)

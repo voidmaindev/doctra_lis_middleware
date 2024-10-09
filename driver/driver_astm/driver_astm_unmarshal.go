@@ -311,32 +311,31 @@ func parseHeader(content string) Header {
 
 	// Split for sender and receiver names, if applicable
 	senderParts := strings.Split(parts[4], "^")
-	receiverParts := strings.Split(parts[5], "^")
+	receiverParts := strings.Split(parts[9], "^")
 	analyzerParts := strings.Split(parts[6], "^")
 
 	messageProcessingParts := strings.Split(parts[10], "^") // TSREQ^REAL
 
 	return Header{
-		Type:               "H",
-		SenderID:           senderParts[0],
-		SenderName:         ifExists(senderParts, 1),
-		ReceiverID:         receiverParts[0],
-		ReceiverName:       ifExists(receiverParts, 1),
-		AnalyzerType:       analyzerParts[0],
-		Version:            ifExists(analyzerParts, 1),
-		ControlID:          parts[8],           // Assuming part[8] is for control tracking/logging
-		AccessPassword:     ifExists(parts, 9), // Assigns password/security, part[9] possibly the missing field
-		SequenceNumber:     parts[7],
-		Timestamp:          parseTimestamp(parts[13]),
-		MessageType:        messageProcessingParts[0],                   // TSREQ or other message type
-		ProcessingMode:     ifExists(messageProcessingParts, 1, "REAL"), // REAL, SIM, etc.
-		ProcessingID:       parts[11],
-		AcknowledgmentCode: ifExists(parts, 12),          // Acknowledgment field if present
-		CharacterSet:       ifExists(parts, 15, "ASCII"), // Default to ASCII if not present
-		SecurityCode:       ifExists(parts, 16),
-		SoftwareVersion:    ifExists(parts, 17),
-		ApplicationName:    ifExists(parts, 18),
-		FacilityID:         ifExists(parts, 19),
+		Type:            "H",
+		SenderID:        senderParts[0],
+		SenderName:      ifExists(senderParts, 1),
+		ReceiverID:      receiverParts[0],
+		ReceiverName:    ifExists(receiverParts, 1),
+		AnalyzerType:    analyzerParts[0],
+		Version:         ifExists(analyzerParts, 1),
+		ControlID:       parts[8],           // Assuming part[8] is for control tracking/logging
+		AccessPassword:  ifExists(parts, 9), // Assigns password/security, part[9] possibly the missing field
+		Timestamp:       parseTimestamp(parts[13]),
+		MessageType:     messageProcessingParts[0],                   // TSREQ or other message type
+		ProcessingMode:  ifExists(messageProcessingParts, 1, "REAL"), // REAL, SIM, etc.
+		ProcessingID:    parts[11],
+		SequenceNumber:  ifExists(parts, 12),
+		CharacterSet:    ifExists(parts, 15, "ASCII"), // Default to ASCII if not present
+		SecurityCode:    ifExists(parts, 16),
+		SoftwareVersion: ifExists(parts, 17),
+		ApplicationName: ifExists(parts, 18),
+		FacilityID:      ifExists(parts, 19),
 	}
 }
 
@@ -470,17 +469,6 @@ type QueryAnswerOrder struct {
 	Report    string
 }
 
-// formatQueryAnswerOrderMessage formats the structured QueryAnswerOrder message
-func formatQueryAnswerOrderMessage(order QueryAnswerOrder) string {
-	return fmt.Sprintf("O|%s|%s||^^^%s^\\^^^555|%s||||||%s||||||||||||||O\\Q",
-		order.ID,
-		order.PatientID,
-		order.Param,
-		order.Priority,
-		order.Report,
-	)
-}
-
 // generateASTMMessagesFromQuery formats the queryMessages and appends data from dataToReturn
 func generateASTMMessagesFromQuery(queryMessages []Message, dataToReturn []services.DeviceQueryDataToReturn) []string {
 	var formattedMessages []string
@@ -495,15 +483,9 @@ func generateASTMMessagesFromQuery(queryMessages []Message, dataToReturn []servi
 				msg.Header.MessageType = "TSDWN"
 				msg.Header.ProcessingMode = "REPLY"
 			}
-			formattedMsg = fmt.Sprintf("H|\\^&|%s|%s|%s^%s^%s^%s^%s|||||%s|%s^%s|%s|%s|%s",
-				msg.Header.SenderID,                           // ID of the sender
+			formattedMsg = fmt.Sprintf("H|\\^&|||%s|||||%s|%s^%s|%s|%s|%s",
 				msg.Header.ReceiverID,                         // ID of the receiver
-				msg.Header.AnalyzerType,                       // Analyzer type (model)
-				msg.Header.SenderName,                         // Sender name (if present)
-				msg.Header.AnalyzerType,                       // Analyzer type again (if repeated)
-				msg.Header.Version,                            // Version of the analyzer
-				msg.Header.ControlID,                          // Control ID for tracking purposes
-				msg.Header.ReceiverID,                         // Receiver, could be lab host
+				msg.Header.SenderID,                           // ID of the sender
 				msg.Header.MessageType,                        // TSDWN (Test Shutdown)
 				msg.Header.ProcessingMode,                     // REPLY
 				msg.Header.ProcessingID,                       // Processing ID (e.g., P for production)
@@ -521,7 +503,14 @@ func generateASTMMessagesFromQuery(queryMessages []Message, dataToReturn []servi
 					Priority:  "R",
 					Report:    "A",
 				}
-				formattedMessages = addFormattedMessage(formattedMessages, formatQueryAnswerOrderMessage(order))
+				formattedMsg = fmt.Sprintf("O|%s|%s||^^^%s^\\^^^555|%s||||||%s||||||||||||||O\\Q",
+					order.ID,
+					order.PatientID,
+					order.Param,
+					order.Priority,
+					order.Report,
+				)
+				formattedMessages = addFormattedMessage(formattedMessages, formattedMsg)
 			}
 		}
 
