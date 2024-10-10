@@ -250,6 +250,7 @@ type Notification struct {
 func parseASTMMessages(data string) []Message {
 	var messages []Message
 	segments := strings.Split(data, stx)
+
 	var currentMessage Message
 	var results []Result
 	var comments []Comment
@@ -257,6 +258,11 @@ func parseASTMMessages(data string) []Message {
 	for _, segment := range segments {
 		if len(segment) > 2 {
 			segmentType := string(segment[1])
+			segmentStartIndex := 2
+			if segmentType == "|" {
+				segmentType = string(segment[0])
+				segmentStartIndex = 1
+			}
 			contentEnd := strings.Index(segment, etb)
 			if contentEnd == -1 {
 				contentEnd = strings.Index(segment, etx)
@@ -265,7 +271,7 @@ func parseASTMMessages(data string) []Message {
 				contentEnd = len(segment)
 			}
 
-			content := segment[2:contentEnd]
+			content := segment[segmentStartIndex:contentEnd]
 
 			switch segmentType {
 			case "H":
@@ -371,14 +377,19 @@ func parsePatient(content string) Patient {
 // parseOrder parses the order segment
 func parseOrder(content string) Order {
 	parts := strings.Split(content, "|")
+	patientName := parts[3]
+	if len(patientName) == 0 {
+		patientName = parts[2]
+	}
+
 	return Order{
 		Type:        "O",
 		ID:          parts[1],
 		PatientID:   parts[2],
-		PatientName: parts[3],
-		Priority:    parts[5],
-		Timestamp:   parts[22],
-		Status:      parts[21],
+		PatientName: patientName,
+		// Priority:    parts[5],
+		// Timestamp:   parts[22],
+		// Status:      parts[21],
 	}
 }
 
