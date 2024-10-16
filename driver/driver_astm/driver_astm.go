@@ -104,8 +104,12 @@ func (d *Driver_astm) doQuery(conn net.Conn, data map[string]interface{}) error 
 
 	ackStr := fmt.Sprintf("%c", ack)
 
+	// Generate messages based on queryMessages and dataToReturn
+	formattedMessages := generateASTMMessagesFromQuery(queryMessages, dataToReturn)
+
 	// Send ENQ (Enquiry)
-	if _, err := conn.Write([]byte(fmt.Sprintf("%c", rawDataStartString))); err != nil {
+	// if _, err := conn.Write([]byte(fmt.Sprintf("%c", rawDataStartString))); err != nil {
+	if err := SendToConn(conn, fmt.Sprintf("%c", rawDataStartString)); err != nil {
 		return err
 	}
 
@@ -115,17 +119,15 @@ func (d *Driver_astm) doQuery(conn net.Conn, data map[string]interface{}) error 
 		return err
 	}
 	if string(buf) != ackStr {
-		return fmt.Errorf("expected ACK from device, got: %v", buf)
+		return fmt.Errorf("expected ACK from device, got: \"%v\"", buf)
 	}
-
-	// Generate messages based on queryMessages and dataToReturn
-	formattedMessages := generateASTMMessagesFromQuery(queryMessages, dataToReturn)
 
 	// Send the formatted messages over the connection
 	for i, msg := range formattedMessages {
 		msg = fmt.Sprintf("%d", i+1) + stx + msg
 		// Send the message with STX and ETX framing
-		if _, err := conn.Write([]byte(msg)); err != nil {
+		// if _, err := conn.Write([]byte(msg)); err != nil {
+		if err := SendToConn(conn, msg); err != nil {
 			return err
 		}
 
@@ -134,12 +136,25 @@ func (d *Driver_astm) doQuery(conn net.Conn, data map[string]interface{}) error 
 			return err
 		}
 		if string(buf) != ackStr {
-			return fmt.Errorf("expected ACK after sending message, got: %v", buf)
+			return fmt.Errorf("expected ACK after sending message, got: \"%v\"", buf)
 		}
 	}
 
 	// Finally, send EOT (End of Transmission)
-	if _, err := conn.Write([]byte(fmt.Sprintf("%c", rawDataEndString))); err != nil {
+	// if _, err := conn.Write([]byte(fmt.Sprintf("%c", rawDataEndString))); err != nil {
+	if err := SendToConn(conn, fmt.Sprintf("%c", rawDataEndString)); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// SendToConn sends the message to the connection.
+func SendToConn(conn net.Conn, msg string) error {
+	fmt.Printf("Sending message to connection: \"%s\"", msg)
+
+	_, err := conn.Write([]byte(msg))
+	if err != nil {
 		return err
 	}
 
