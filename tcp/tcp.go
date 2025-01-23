@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"sync"
 
 	"github.com/voidmaindev/doctra_lis_middleware/log"
 )
@@ -24,6 +25,7 @@ type RcvData struct {
 	Conn       net.Conn
 	ConnString string
 	Data       []byte
+	Wg         *sync.WaitGroup
 }
 
 // PrevData is the struct that represents the previous data of the connection.
@@ -37,6 +39,7 @@ type ConnData struct {
 	Conn       net.Conn
 	ConnString string
 	PrevData   *PrevData
+	Wg         *sync.WaitGroup
 }
 
 // NewTCP creates a new TCP connection.
@@ -59,9 +62,10 @@ func (t *TCP) AcceptConnections() {
 		if err != nil {
 			if err == net.ErrClosed || err == io.EOF || err.Error() == "EOF" {
 				t.Log.Info("TCP listener closed")
-				return
+				return //TODO: return or recreate listener and continue
 			}
 			t.Log.Err(err, "failed to accept a connection")
+			continue
 		}
 
 		connString := getConnString(conn)
@@ -69,31 +73,37 @@ func (t *TCP) AcceptConnections() {
 		t.Log.Info("accepted a connection from " + connString)
 		t.Conns[connString] = newConnData(conn, connString)
 
-		go t.ReadMessages(conn)
+		go t.ReadMessages(conn, t.Conns[connString])
 	}
 }
 
 // newConnData creates a new connection data.
 func newConnData(conn net.Conn, connString string) *ConnData {
-	return &ConnData{Conn: conn, ConnString: connString, PrevData: &PrevData{}}
+	return &ConnData{
+		Conn:       conn,
+		ConnString: connString,
+		PrevData:   &PrevData{},
+		Wg:         &sync.WaitGroup{},
+	}
 }
 
 // ReadMessages reads messages from the connection.
-func (t *TCP) ReadMessages(conn net.Conn) {
-	connString := getConnString(conn)
+func (t *TCP) ReadMessages(conn net.Conn, connData *ConnData) {
+	// connString := getConnString(conn)
 	buf := make([]byte, hl7BufferSize) // Allocate buffer once
 
 	defer func() {
 		conn.Close()
-		// delete(t.Conns, connString)
-		t.Log.Info(fmt.Sprintf("connection from %s closed", connString))
+		// delete(t.Conns, connData.connString)
+		t.Log.Info(fmt.Sprintf("connection from %s closed", connData.ConnString))
 	}()
 
 	for {
+		connData.Wg.Wait()
 		n, err := conn.Read(buf)
 		if err != nil {
 			// if err == net.ErrClosed || err == io.EOF || err.Error() == "EOF" {
-			t.Log.Err(err, fmt.Sprintf("connection from %s closed", connString))
+			t.Log.Err(err, fmt.Sprintf("connection from %s closed", connData.ConnString))
 			// t.Log.Info(fmt.Sprintf("connection from %s closed", connString))
 			return
 			// }
@@ -102,7 +112,14 @@ func (t *TCP) ReadMessages(conn net.Conn) {
 			// continue
 		}
 
-		t.RcvChannel <- RcvData{Conn: conn, ConnString: connString, Data: buf[:n]}
+		rcvData := RcvData{
+			Conn:       conn,
+			ConnString: connData.ConnString,
+			Data:       buf[:n],
+			Wg:         connData.Wg,
+		}
+		connData.Wg.Add(1)
+		t.RcvChannel <- rcvData
 	}
 }
 

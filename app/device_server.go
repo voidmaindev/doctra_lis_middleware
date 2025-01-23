@@ -132,26 +132,36 @@ func (a *DeviceServerApplication) Stop() error {
 // ManageMessages manages the messages received by the device server.
 func (a *DeviceServerApplication) ManageMessages() {
 	for msg := range a.TCP.RcvChannel {
-		conn := a.TCP.Conns[msg.ConnString]
-		if conn == nil {
-			a.Log.Error("failed to get a connection by network address: " + msg.ConnString)
-			continue
-		}
+		go a.manageMessage(msg)
+	}
+}
 
-		a.Log.Info("received a message from " + msg.ConnString)
-		a.Log.Info(string(msg.Data))
+// manageMessage manages the message received by the device server.
+func (a *DeviceServerApplication) manageMessage(msg tcp.RcvData) {
+	defer func() {
+		msg.Wg.Done()
+	}()
 
-		device, err := a.Store.DeviceStore.GetByNetAddress(msg.ConnString)
-		if err != nil {
-			a.Log.Error("failed to get a device by network address: " + msg.ConnString)
-			continue
-		}
+	conn := a.TCP.Conns[msg.ConnString]
 
-		err = a.processDeviceMessage(msg.Data, conn, device, a.Log, a.Store)
-		if err != nil {
-			a.Log.Error("failed to process the device message")
-			continue
-		}
+	if conn == nil {
+		a.Log.Error("failed to get a connection by network address: " + msg.ConnString)
+		return
+	}
+
+	a.Log.Info("received a message from " + msg.ConnString)
+	a.Log.Info(string(msg.Data))
+
+	device, err := a.Store.DeviceStore.GetByNetAddress(msg.ConnString)
+	if err != nil {
+		a.Log.Error("failed to get a device by network address: " + msg.ConnString)
+		return
+	}
+
+	err = a.processDeviceMessage(msg.Data, conn, device, a.Log, a.Store)
+	if err != nil {
+		a.Log.Error("failed to process the device message")
+		return
 	}
 }
 
