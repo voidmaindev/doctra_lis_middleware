@@ -3,6 +3,7 @@ package driver_astm
 import (
 	"fmt"
 	"net"
+	"time"
 
 	"github.com/voidmaindev/doctra_lis_middleware/log"
 	"github.com/voidmaindev/doctra_lis_middleware/services"
@@ -102,47 +103,27 @@ func (d *Driver_astm) doQuery(conn net.Conn, data map[string]interface{}) error 
 
 	queryMessages := data[queryMessagesName].([]Message)
 
-	ackStr := fmt.Sprintf("%c", ack)
-
 	// Generate messages based on queryMessages and dataToReturn
 	formattedMessages := generateASTMMessagesFromQuery(queryMessages, dataToReturn)
 
-	// Send ENQ (Enquiry)
-	// if _, err := conn.Write([]byte(fmt.Sprintf("%c", rawDataStartString))); err != nil {
-	if err := SendToConn(conn, fmt.Sprintf("%c", rawDataStartString)); err != nil {
+	_ = SendToConn(conn, []byte{rawDataStartString})
+	err = SendToConn(conn, []byte{rawDataStartString})
+	if err != nil {
 		return err
-	}
-
-	// Wait for ACK from the device
-	buf := make([]byte, 1)
-	if _, err := conn.Read(buf); err != nil {
-		return err
-	}
-	if string(buf) != ackStr {
-		return fmt.Errorf("expected ACK from device, got: \"%v\"", buf)
 	}
 
 	// Send the formatted messages over the connection
 	for i, msg := range formattedMessages {
-		msg = fmt.Sprintf("%d", i+1) + stx + msg
+		msg = stx + fmt.Sprintf("%d", i+1) + msg
+		fmt.Println(msg)
 		// Send the message with STX and ETX framing
-		// if _, err := conn.Write([]byte(msg)); err != nil {
-		if err := SendToConn(conn, msg); err != nil {
+		if err := SendToConn(conn, []byte(msg)); err != nil {
 			return err
-		}
-
-		// Wait for ACK from the device after each message
-		if _, err := conn.Read(buf); err != nil {
-			return err
-		}
-		if string(buf) != ackStr {
-			return fmt.Errorf("expected ACK after sending message, got: \"%v\"", buf)
 		}
 	}
 
-	// Finally, send EOT (End of Transmission)
-	// if _, err := conn.Write([]byte(fmt.Sprintf("%c", rawDataEndString))); err != nil {
-	if err := SendToConn(conn, fmt.Sprintf("%c", rawDataEndString)); err != nil {
+	err = SendToConn(conn, []byte{rawDataEndString})
+	if err != nil {
 		return err
 	}
 
@@ -150,12 +131,47 @@ func (d *Driver_astm) doQuery(conn net.Conn, data map[string]interface{}) error 
 }
 
 // SendToConn sends the message to the connection.
-func SendToConn(conn net.Conn, msg string) error {
-	fmt.Printf("Sending message to connection: \"%s\"", msg)
-
-	_, err := conn.Write([]byte(msg))
+func SendToConn(conn net.Conn, msg []byte) error {
+	fmt.Printf("Sending message to connection: \"%v\"\n", msg)
+	_, err := conn.Write(msg)
 	if err != nil {
 		return err
+	}
+
+	time.Sleep(500 * time.Millisecond)
+
+	return nil
+
+	// for i := 0; i < 3; i++ {
+	// 	fmt.Printf("Sending message to connection: \"%v\"\n", msg)
+
+	// 	_, err := conn.Write(msg)
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	// 	err = getAckFromDevice(conn)
+	// 	if err == nil {
+	// 		fmt.Println("Received ACK from device")
+	// 		return nil
+	// 	} else {
+	// 		fmt.Println("Failed to receive ACK from device")
+	// 	}
+	// }
+
+	// return errors.New("failed to send message and get ACK from device")
+}
+
+// getAckFromDevice waits for an ACK message from the device.
+func getAckFromDevice(conn net.Conn) error {
+	buf := make([]byte, 1)
+
+	_, err := conn.Read(buf)
+	if err != nil {
+		return err
+	}
+	if buf[0] != byte(ack) {
+		fmt.Printf("Expected ACK from device, got: \"%v\"\n", buf)
+		return fmt.Errorf("expected ACK from device, got: \"%v\"", buf)
 	}
 
 	return nil

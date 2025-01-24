@@ -504,6 +504,9 @@ func generateASTMMessagesFromQuery(queryMessages []Message, dataToReturn []servi
 				msg.Header.Timestamp.Format("20060102150405"), // Timestamp in the correct format
 			)
 			formattedMessages = addFormattedMessage(formattedMessages, formattedMsg)
+
+			formattedMsg = "P|1"
+			formattedMessages = addFormattedMessage(formattedMessages, formattedMsg)
 		}
 		if msg.Query.Type == "Q" {
 			for i, data := range dataToReturn {
@@ -514,7 +517,7 @@ func generateASTMMessagesFromQuery(queryMessages []Message, dataToReturn []servi
 					Priority:  "R",
 					Report:    "A",
 				}
-				formattedMsg = fmt.Sprintf("O|%s|%s||^^^%s^\\^^^555|%s||||||%s||||||||||||||O\\Q",
+				formattedMsg = fmt.Sprintf("O|%s|%s||^^^%s^\\^^^687|%s||||||%s||||||||||||||O\\Q",
 					order.ID,
 					order.PatientID,
 					order.Param,
@@ -523,6 +526,8 @@ func generateASTMMessagesFromQuery(queryMessages []Message, dataToReturn []servi
 				)
 				formattedMessages = addFormattedMessage(formattedMessages, formattedMsg)
 			}
+			formattedMsg = "C|1|L|Default·TS^^^^|G"
+			formattedMessages = addFormattedMessage(formattedMessages, formattedMsg)
 		}
 
 		// if msg.Query.Type == "C" {
