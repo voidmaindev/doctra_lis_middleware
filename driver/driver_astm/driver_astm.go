@@ -3,7 +3,6 @@ package driver_astm
 import (
 	"fmt"
 	"net"
-	"time"
 
 	"github.com/voidmaindev/doctra_lis_middleware/log"
 	"github.com/voidmaindev/doctra_lis_middleware/services"
@@ -72,7 +71,7 @@ func (d *Driver_astm) SendSimpleACK(conn net.Conn) error {
 
 // ReceivedSimpleACK checks if the message is an ACK message.
 func (d *Driver_astm) ReceivedSimpleACK(msg string) bool {
-	return msg == string(ack)
+	return msg == fmt.Sprintf("%c", ack)
 }
 
 // PostUnmarshalActions performs the post-unmarshal actions.
@@ -106,18 +105,26 @@ func (d *Driver_astm) doQuery(conn net.Conn, data map[string]interface{}) error 
 	// Generate messages based on queryMessages and dataToReturn
 	formattedMessages := generateASTMMessagesFromQuery(queryMessages, dataToReturn)
 
-	_ = SendToConn(conn, []byte{rawDataStartString})
 	err = SendToConn(conn, []byte{rawDataStartString})
+	if err != nil {
+		return err
+	}
+
+	err = getAckFromDevice(conn)
 	if err != nil {
 		return err
 	}
 
 	// Send the formatted messages over the connection
 	for i, msg := range formattedMessages {
-		msg = stx + fmt.Sprintf("%d", i+1) + msg
-		fmt.Println(msg)
-		// Send the message with STX and ETX framing
-		if err := SendToConn(conn, []byte(msg)); err != nil {
+		checkSum := calculateASTMChecksum(fmt.Sprintf("%d", i+1) + msg + cr + etx)
+		formattedMsg := stx + fmt.Sprintf("%d", i+1) + msg + cr + etx + checkSum + cr + lf
+
+		if err := SendToConn(conn, []byte(formattedMsg)); err != nil {
+			return err
+		}
+		err = getAckFromDevice(conn)
+		if err != nil {
 			return err
 		}
 	}
@@ -127,18 +134,34 @@ func (d *Driver_astm) doQuery(conn net.Conn, data map[string]interface{}) error 
 		return err
 	}
 
-	return nil
-}
-
-// SendToConn sends the message to the connection.
-func SendToConn(conn net.Conn, msg []byte) error {
-	fmt.Printf("Sending message to connection: \"%v\"\n", msg)
-	_, err := conn.Write(msg)
+	err = getAckFromDevice(conn)
 	if err != nil {
 		return err
 	}
 
-	time.Sleep(500 * time.Millisecond)
+	return nil
+}
+
+// calculateASTMChecksum calculates the checksum for ASTM protocol
+func calculateASTMChecksum(content string) string {
+	sum := 0
+
+	for _, char := range content {
+		sum += int(char)
+	}
+
+	checksum := sum % 0x100
+
+	return fmt.Sprintf("%02X", checksum)
+}
+
+// SendToConn sends the message to the connection.
+func SendToConn(conn net.Conn, msg []byte) error {
+	fmt.Printf("sent from gr2: \"%v\"\n", string(msg))
+	_, err := conn.Write(msg)
+	if err != nil {
+		return err
+	}
 
 	return nil
 
@@ -163,15 +186,17 @@ func SendToConn(conn net.Conn, msg []byte) error {
 
 // getAckFromDevice waits for an ACK message from the device.
 func getAckFromDevice(conn net.Conn) error {
-	buf := make([]byte, 1)
+	fmt.Println("Waiting for ACK to gr2")
+	buf := make([]byte, 1024)
 
-	_, err := conn.Read(buf)
+	n, err := conn.Read(buf)
 	if err != nil {
 		return err
 	}
+	fmt.Printf("Received to gr2: \"%v\"\n", buf[:n])
 	if buf[0] != byte(ack) {
-		fmt.Printf("Expected ACK from device, got: \"%v\"\n", buf)
-		return fmt.Errorf("expected ACK from device, got: \"%v\"", buf)
+		fmt.Printf("Expected ACK from device, got: \"%v\"\n", buf[:n])
+		return fmt.Errorf("expected ACK from device, got: \"%v\"", buf[:n])
 	}
 
 	return nil

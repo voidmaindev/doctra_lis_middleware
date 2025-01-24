@@ -517,7 +517,8 @@ func generateASTMMessagesFromQuery(queryMessages []Message, dataToReturn []servi
 					Priority:  "R",
 					Report:    "A",
 				}
-				formattedMsg = fmt.Sprintf("O|%s|%s||^^^%s^\\^^^687|%s||||||%s||||||||||||||O\\Q",
+				// formattedMsg = fmt.Sprintf("O|%s|%s||^^^%s^\\^^^687|%s||||||%s||||||||||||||O\\Q",
+				formattedMsg = fmt.Sprintf("O|%s|%s||^^^%s^|%s||||||%s||||||||||||||O\\Q",
 					order.ID,
 					order.PatientID,
 					order.Param,
@@ -526,8 +527,8 @@ func generateASTMMessagesFromQuery(queryMessages []Message, dataToReturn []servi
 				)
 				formattedMessages = addFormattedMessage(formattedMessages, formattedMsg)
 			}
-			formattedMsg = "C|1|L|Default·TS^^^^|G"
-			formattedMessages = addFormattedMessage(formattedMessages, formattedMsg)
+			// formattedMsg = "C|1|L|Default·TS^^^^|G"
+			// formattedMessages = addFormattedMessage(formattedMessages, formattedMsg)
 		}
 
 		// if msg.Query.Type == "C" {
@@ -545,19 +546,8 @@ func generateASTMMessagesFromQuery(queryMessages []Message, dataToReturn []servi
 
 // addFormattedMessage adds the formatted message to the formattedMessages slice
 func addFormattedMessage(formattedMessages []string, formattedMsg string) []string {
-	checkSum := calculateASTMChecksum(formattedMsg)
-	formattedMsg = formattedMsg + cr + string(etx) + fmt.Sprintf("%02X", checkSum) + cr + lf
+	// checkSum := calculateASTMChecksum(formattedMsg + cr + string(etx))
+	// formattedMsg = formattedMsg + cr + string(etx) + checkSum + cr + lf
 
 	return append(formattedMessages, formattedMsg)
-}
-
-// calculateASTMChecksum calculates the checksum for ASTM protocol
-func calculateASTMChecksum(content string) int {
-	checkSum := 0
-
-	for i := 0; i < len(content); i++ {
-		checkSum ^= int(content[i])
-	}
-
-	return checkSum
 }
