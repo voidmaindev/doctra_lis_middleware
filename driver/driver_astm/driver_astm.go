@@ -89,6 +89,7 @@ func (d *Driver_astm) PostUnmarshalActions(conn net.Conn, data map[string]interf
 func (d *Driver_astm) doQuery(conn net.Conn, data map[string]interface{}) error {
 	query, ok := data[queryName]
 	if !ok {
+		d.log.Error("no query message found")
 		return nil
 	}
 
@@ -124,11 +125,13 @@ func (d *Driver_astm) doQuery(conn net.Conn, data map[string]interface{}) error 
 
 		err := SendToConn(conn, []byte(formattedMsg))
 		if err != nil {
+			d.log.Err(err, fmt.Sprintf("failed to send the message: %v", msg))
 			return err
 		}
 
 		err = getAckFromDevice(conn)
 		if err != nil {
+			d.log.Err(err, "failed to get an ACK from the device")
 			return err
 		}
 	}
