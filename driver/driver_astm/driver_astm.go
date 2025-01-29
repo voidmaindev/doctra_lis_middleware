@@ -89,7 +89,6 @@ func (d *Driver_astm) PostUnmarshalActions(conn net.Conn, data map[string]interf
 func (d *Driver_astm) doQuery(conn net.Conn, data map[string]interface{}) error {
 	query, ok := data[queryName]
 	if !ok {
-		d.log.Error("no query message found")
 		return nil
 	}
 
