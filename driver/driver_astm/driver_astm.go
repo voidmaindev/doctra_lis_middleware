@@ -96,33 +96,37 @@ func (d *Driver_astm) doQuery(conn net.Conn, data map[string]interface{}) error 
 
 	dataToReturn, err := d.deviceQueryService.Query(barcode)
 	if err != nil {
-		d.log.Error("failed to query the service")
+		d.log.Err(err, "failed to query the service")
 		return err
 	}
 
 	queryMessages := data[queryMessagesName].([]Message)
 
-	// Generate messages based on queryMessages and dataToReturn
 	formattedMessages := generateASTMMessagesFromQuery(queryMessages, dataToReturn)
 
 	err = SendToConn(conn, []byte{rawDataStartString})
 	if err != nil {
+		d.log.Err(err, "failed to send the start string")
 		return err
 	}
 
 	err = getAckFromDevice(conn)
 	if err != nil {
+		d.log.Err(err, "failed to get an ACK from the device")
 		return err
 	}
 
-	// Send the formatted messages over the connection
 	for i, msg := range formattedMessages {
-		checkSum := calculateASTMChecksum(fmt.Sprintf("%d", i+1) + msg + cr + etx)
-		formattedMsg := stx + fmt.Sprintf("%d", i+1) + msg + cr + etx + checkSum + cr + lf
+		msgForChecksum := fmt.Sprintf("%d", i+1) + msg + cr + etx
+		checkSum := calculateASTMChecksum(msgForChecksum)
 
-		if err := SendToConn(conn, []byte(formattedMsg)); err != nil {
+		formattedMsg := stx + msgForChecksum + checkSum + cr + lf
+
+		err := SendToConn(conn, []byte(formattedMsg))
+		if err != nil {
 			return err
 		}
+
 		err = getAckFromDevice(conn)
 		if err != nil {
 			return err
@@ -157,45 +161,24 @@ func calculateASTMChecksum(content string) string {
 
 // SendToConn sends the message to the connection.
 func SendToConn(conn net.Conn, msg []byte) error {
-	fmt.Printf("sent from gr2: \"%v\"\n", string(msg))
 	_, err := conn.Write(msg)
 	if err != nil {
 		return err
 	}
 
 	return nil
-
-	// for i := 0; i < 3; i++ {
-	// 	fmt.Printf("Sending message to connection: \"%v\"\n", msg)
-
-	// 	_, err := conn.Write(msg)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// 	err = getAckFromDevice(conn)
-	// 	if err == nil {
-	// 		fmt.Println("Received ACK from device")
-	// 		return nil
-	// 	} else {
-	// 		fmt.Println("Failed to receive ACK from device")
-	// 	}
-	// }
-
-	// return errors.New("failed to send message and get ACK from device")
 }
 
 // getAckFromDevice waits for an ACK message from the device.
 func getAckFromDevice(conn net.Conn) error {
-	fmt.Println("Waiting for ACK to gr2")
-	buf := make([]byte, 1024)
+	buf := make([]byte, 1<<5)
 
 	n, err := conn.Read(buf)
 	if err != nil {
 		return err
 	}
-	fmt.Printf("Received to gr2: \"%v\"\n", buf[:n])
+
 	if buf[0] != byte(ack) {
-		fmt.Printf("Expected ACK from device, got: \"%v\"\n", buf[:n])
 		return fmt.Errorf("expected ACK from device, got: \"%v\"", buf[:n])
 	}
 
