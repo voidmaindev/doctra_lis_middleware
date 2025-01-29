@@ -140,11 +140,6 @@ func (d *Driver_astm) doQuery(conn net.Conn, data map[string]interface{}) error 
 		return err
 	}
 
-	err = getAckFromDevice(conn)
-	if err != nil {
-		return err
-	}
-
 	return nil
 }
 
