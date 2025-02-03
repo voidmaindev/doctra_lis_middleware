@@ -509,24 +509,49 @@ func generateASTMMessagesFromQuery(queryMessages []Message, dataToReturn []servi
 			formattedMessages = addFormattedMessage(formattedMessages, formattedMsg)
 		}
 		if msg.Query.Type == "Q" {
-			for i, data := range dataToReturn {
-				order := QueryAnswerOrder{
-					ID:        fmt.Sprintf("%d", i+1),
-					PatientID: msg.Query.SampleID,
-					Param:     data.Param,
-					Priority:  "R",
-					Report:    "A",
+			// for i, data := range dataToReturn {
+			// 	order := QueryAnswerOrder{
+			// 		ID:        fmt.Sprintf("%d", i+1),
+			// 		PatientID: msg.Query.SampleID,
+			// 		Param:     data.Param,
+			// 		Priority:  "R",
+			// 		Report:    "A",
+			// 	}
+			// 	// formattedMsg = fmt.Sprintf("O|%s|%s||^^^%s^\\^^^687|%s||||||%s||||||||||||||O\\Q",
+			// 	formattedMsg = fmt.Sprintf("O|%s|%s||^^^%s^|%s||||||%s||||||||||||||O\\Q",
+			// 		order.ID,
+			// 		order.PatientID,
+			// 		order.Param,
+			// 		order.Priority,
+			// 		order.Report,
+			// 	)
+			// 	formattedMessages = addFormattedMessage(formattedMessages, formattedMsg)
+			// }
+
+			barcodeToSend := ""
+			for _, data := range dataToReturn {
+				prefix := ""
+				if barcodeToSend != "" {
+					prefix = "\\"
 				}
-				// formattedMsg = fmt.Sprintf("O|%s|%s||^^^%s^\\^^^687|%s||||||%s||||||||||||||O\\Q",
-				formattedMsg = fmt.Sprintf("O|%s|%s||^^^%s^|%s||||||%s||||||||||||||O\\Q",
-					order.ID,
-					order.PatientID,
-					order.Param,
-					order.Priority,
-					order.Report,
-				)
-				formattedMessages = addFormattedMessage(formattedMessages, formattedMsg)
+				barcodeToSend += prefix + fmt.Sprintf("^^^%s^", data.Param)
 			}
+			order := QueryAnswerOrder{
+				ID:        fmt.Sprintf("%d", 1),
+				PatientID: msg.Query.SampleID,
+				Param:     barcodeToSend,
+				Priority:  "R",
+				Report:    "A",
+			}
+			// formattedMsg = fmt.Sprintf("O|%s|%s||^^^%s^\\^^^687|%s||||||%s||||||||||||||O\\Q",
+			formattedMsg = fmt.Sprintf("O|%s|%s||%s|%s||||||%s||||||||||||||O\\Q",
+				order.ID,
+				order.PatientID,
+				order.Param,
+				order.Priority,
+				order.Report,
+			)
+			formattedMessages = addFormattedMessage(formattedMessages, formattedMsg)
 			// formattedMsg = "C|1|L|Default·TS^^^^|G"
 			// formattedMessages = addFormattedMessage(formattedMessages, formattedMsg)
 		}
