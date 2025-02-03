@@ -99,7 +99,10 @@ func (d *Driver_astm) doQuery(conn net.Conn, data map[string]interface{}) error 
 		d.log.Err(err, "failed to query the service")
 		return err
 	}
-
+	if len(dataToReturn) == 0 {
+		d.log.Error("query service returned no data")
+		return nil
+	}
 	queryMessages := data[queryMessagesName].([]Message)
 
 	formattedMessages := generateASTMMessagesFromQuery(queryMessages, dataToReturn)
