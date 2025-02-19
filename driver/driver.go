@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/voidmaindev/doctra_lis_middleware/driver/driver_astm"
+	"github.com/voidmaindev/doctra_lis_middleware/driver/driver_astm_e1394_97"
 	"github.com/voidmaindev/doctra_lis_middleware/driver/driver_hl7_231"
 	"github.com/voidmaindev/doctra_lis_middleware/driver/driver_text_combilyzer_13_Human"
 	"github.com/voidmaindev/doctra_lis_middleware/driver/driver_text_huma_reader_hs"
@@ -40,6 +41,8 @@ func NewDriver(driverName string, logger *log.Logger, store *store.Store, device
 		return driver_hl7_231.NewDriver(logger, store, deviceQueryService), nil
 	case "astm":
 		return driver_astm.NewDriver(logger, store, deviceQueryService), nil
+	case "astme139497":
+		return driver_astm_e1394_97.NewDriver(logger, store, deviceQueryService), nil
 	case "textcombilyzer13human":
 		return driver_text_combilyzer_13_Human.NewDriver(logger, store, deviceQueryService), nil
 	case "texthumalyzerprimushuman":
@@ -57,7 +60,7 @@ func normalizeDriverName(driverName string) string {
 	rv = strings.Trim(rv, " ")
 	rv = strings.ToLower(rv)
 
-	deletions := []string{".", " ", "_"}
+	deletions := []string{".", " ", "_", "-"}
 	for _, deletion := range deletions {
 		rv = strings.ReplaceAll(rv, deletion, "")
 	}
@@ -69,6 +72,7 @@ func Drivers() []string {
 	return []string{
 		"hl7_231",
 		"astm",
+		"astm_E1394-97",
 		"text_combilyzer_13_human",
 		"text_humalyzer_primus_human",
 		"text_huma_reader_hs",
