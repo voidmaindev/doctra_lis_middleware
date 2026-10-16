@@ -174,3 +174,25 @@ Phase 1: Project Setup (issue #1, label: phase)
 - For any frontend work, always use the `frontend-design` skill.
 - Always use Context7 MCP whenever needed.
 - Always use Playwright MCP for browser testing.
+
+<!-- BEGIN: branching skill -->
+# Branching policy — HARDGATED
+
+**Every change to this repo goes through a feature branch and a PR. No exceptions.**
+
+- `stable` is the default branch. All PRs target `stable`.
+- `main` is the release / CI-CD branch. Humans only.
+- **NEVER** commit, push, or force-push to `stable` or `main`.
+- **NEVER** merge `stable` → `main` from a Claude session — humans promote releases.
+- **NEVER** edit files while checked out on `stable` or `main`. Switch to a feature branch first.
+
+**Workflow for every task:**
+1. `git fetch origin && git checkout stable && git pull --ff-only`
+2. Create a branch: `<handle>/<short-slug>` — `<handle>` = local part of `git config user.email`.
+3. Open a **draft PR** targeting `stable` BEFORE writing code. The draft PR is your claim.
+4. Run `gh pr list --state open` first; if any open PR overlaps with your task, STOP and ask.
+5. Keep PRs small and atomic. Rebase onto `stable` before requesting review.
+6. Do NOT self-merge unless the user explicitly says so.
+
+On any rebase or merge conflict: STOP and ask the user. The other side may be another developer's in-flight work.
+<!-- END: branching skill -->
