@@ -2,13 +2,24 @@
 package services
 
 import (
+	"encoding/json"
 	"errors"
+	"fmt"
+	"strings"
 
 	"github.com/go-resty/resty/v2"
+	"github.com/voidmaindev/doctra_lis_middleware/log"
+)
+
+const (
+	contentTypeHeader   = "Content-Type"
+	jsonContentType     = "application/json"
+	maxLoggedBodyLength = 2048
 )
 
 type DeviceQueryService struct {
 	client    *resty.Client
+	log       *log.Logger
 	queryHost string
 	device    string
 }
@@ -50,9 +61,10 @@ func (r *DeviceQueryResponseBody) ToReturn() []DeviceQueryDataToReturn {
 }
 
 // NewDeviceQueryService creates a new DeviceQueryService
-func NewDeviceQueryService(queryHost, device string) *DeviceQueryService {
+func NewDeviceQueryService(logger *log.Logger, queryHost, device string) *DeviceQueryService {
 	return &DeviceQueryService{
 		client:    resty.New(),
+		log:       logger,
 		queryHost: queryHost,
 		device:    device,
 	}
@@ -80,5 +92,50 @@ func (s *DeviceQueryService) Query(barcode string) ([]DeviceQueryDataToReturn, e
 		return nil, errors.New("HTTP error: " + resp.Status())
 	}
 
+	err = checkJSONContentType(resp)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(respBody.Indicators) == 0 {
+		s.logEmptyResponse(reqBody, resp)
+	}
+
 	return respBody.ToReturn(), nil
+}
+
+// checkJSONContentType rejects successful responses that are not JSON, since resty
+// silently skips unmarshalling them and the result would look like "no orders".
+func checkJSONContentType(resp *resty.Response) error {
+	contentType := resp.Header().Get(contentTypeHeader)
+	if !strings.Contains(strings.ToLower(contentType), jsonContentType) {
+		return fmt.Errorf("query host returned non-JSON content type %q with status %s", contentType, resp.Status())
+	}
+
+	return nil
+}
+
+// logEmptyResponse records what was sent and what came back when the query host returned no indicators.
+func (s *DeviceQueryService) logEmptyResponse(reqBody *DeviceQueryRequestBody, resp *resty.Response) {
+	reqJSON, err := json.Marshal(reqBody)
+	if err != nil {
+		reqJSON = []byte(fmt.Sprintf("%+v", reqBody))
+	}
+
+	s.log.Warn(fmt.Sprintf("query host returned no indicators: url=%s request=%s status=%s content_type=%q body=%s",
+		s.queryHost,
+		reqJSON,
+		resp.Status(),
+		resp.Header().Get(contentTypeHeader),
+		truncate(string(resp.Body()), maxLoggedBodyLength),
+	))
+}
+
+// truncate shortens a string to at most maxLength characters.
+func truncate(value string, maxLength int) string {
+	if len(value) <= maxLength {
+		return value
+	}
+
+	return value[:maxLength] + "..."
 }

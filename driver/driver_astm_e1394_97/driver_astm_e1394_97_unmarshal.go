@@ -503,26 +503,8 @@ func generateASTMMessagesFromQuery(queryMessages []Message, dataToReturn []servi
 			formattedMsg = "P|1"
 			formattedMessages = addFormattedMessage(formattedMessages, formattedMsg)
 		}
-		if msg.Query.Type == "Q" {
-			barcodeToSend := ""
-			for _, data := range dataToReturn {
-				prefix := ""
-				if barcodeToSend != "" {
-					prefix = "\\"
-				}
-				barcodeToSend += prefix + fmt.Sprintf("^^^%s", data.Param)
-			}
-			order := QueryAnswerOrder{
-				ID:        fmt.Sprintf("%d", 1),
-				PatientID: msg.Query.SampleID,
-				Param:     barcodeToSend,
-			}
-			formattedMsg = fmt.Sprintf("O|%s|%s||%s|P|R",
-				order.ID,
-				order.PatientID,
-				order.Param,
-			)
-			formattedMessages = addFormattedMessage(formattedMessages, formattedMsg)
+		if msg.Query.Type == "Q" && len(dataToReturn) > 0 {
+			formattedMessages = addFormattedMessage(formattedMessages, formatQueryAnswerOrder(msg.Query.SampleID, dataToReturn))
 		}
 
 		if msg.Term.Type == "L" {
@@ -531,6 +513,26 @@ func generateASTMMessagesFromQuery(queryMessages []Message, dataToReturn []servi
 	}
 
 	return formattedMessages
+}
+
+// formatQueryAnswerOrder builds the O record that lists the ordered params for the queried sample.
+func formatQueryAnswerOrder(sampleID string, dataToReturn []services.DeviceQueryDataToReturn) string {
+	paramsToSend := ""
+	for _, data := range dataToReturn {
+		prefix := ""
+		if paramsToSend != "" {
+			prefix = "\\"
+		}
+		paramsToSend += prefix + fmt.Sprintf("^^^%s", data.Param)
+	}
+
+	order := QueryAnswerOrder{
+		ID:        fmt.Sprintf("%d", 1),
+		PatientID: sampleID,
+		Param:     paramsToSend,
+	}
+
+	return fmt.Sprintf("O|%s|%s||%s|P|R", order.ID, order.PatientID, order.Param)
 }
 
 // addFormattedMessage adds the formatted message to the formattedMessages slice
