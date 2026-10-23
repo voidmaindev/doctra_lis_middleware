@@ -92,58 +92,76 @@ func (d *Driver_astm) doQuery(conn net.Conn, data map[string]interface{}) error 
 		return nil
 	}
 
-	barcode := query.(*Query).SampleID
+	frames, err := d.buildQueryReply(query.(*Query), data[queryMessagesName].([]Message))
+	if err != nil {
+		return err
+	}
+
+	err = sendASTMFrames(conn, frames)
+	if err != nil {
+		d.log.Err(err, "failed to send the query reply to the device")
+		return err
+	}
+
+	return nil
+}
+
+// buildQueryReply asks the query service for the orders of the queried barcode
+// and formats the reply frames. With no orders the reply is an empty H/P/L message.
+func (d *Driver_astm) buildQueryReply(query *Query, queryMessages []Message) ([]string, error) {
+	barcode := query.SampleID
 
 	dataToReturn, err := d.deviceQueryService.Query(barcode)
 	if err != nil {
 		d.log.Err(err, "failed to query the service")
-		return err
+		return nil, err
 	}
 	if len(dataToReturn) == 0 {
-		d.log.Error("query service returned no data")
-		return nil
+		d.log.Warn(fmt.Sprintf("query service returned no orders for barcode %s, sending an empty reply", barcode))
 	}
-	queryMessages := data[queryMessagesName].([]Message)
 
-	formattedMessages := generateASTMMessagesFromQuery(queryMessages, dataToReturn)
+	return generateASTMMessagesFromQuery(queryMessages, dataToReturn), nil
+}
 
-	err = SendToConn(conn, []byte{rawDataStartString})
+// sendASTMFrames sends ENQ, the numbered and checksummed frames, and EOT,
+// waiting for an ACK from the device after ENQ and after every frame.
+func sendASTMFrames(conn net.Conn, frames []string) error {
+	err := SendToConn(conn, []byte{rawDataStartString})
 	if err != nil {
-		d.log.Err(err, "failed to send the start string")
-		return err
+		return fmt.Errorf("failed to send the start string: %w", err)
 	}
 
 	err = getAckFromDevice(conn)
 	if err != nil {
-		d.log.Err(err, "failed to get an ACK from the device")
-		return err
+		return fmt.Errorf("failed to get an ACK for the start string: %w", err)
 	}
 
-	for i, msg := range formattedMessages {
-		msgForChecksum := fmt.Sprintf("%d", i+1) + msg + cr + etx
-		checkSum := calculateASTMChecksum(msgForChecksum)
-
-		formattedMsg := stx + msgForChecksum + checkSum + cr + lf
-
-		err := SendToConn(conn, []byte(formattedMsg))
+	for i, frame := range frames {
+		err = SendToConn(conn, []byte(formatASTMFrame(i+1, frame)))
 		if err != nil {
-			d.log.Err(err, fmt.Sprintf("failed to send the message: %v", msg))
-			return err
+			return fmt.Errorf("failed to send the frame %q: %w", frame, err)
 		}
 
 		err = getAckFromDevice(conn)
 		if err != nil {
-			d.log.Err(err, "failed to get an ACK from the device")
-			return err
+			return fmt.Errorf("failed to get an ACK for the frame %q: %w", frame, err)
 		}
 	}
 
 	err = SendToConn(conn, []byte{rawDataEndString})
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to send the end string: %w", err)
 	}
 
 	return nil
+}
+
+// formatASTMFrame wraps a record into an ASTM frame: STX, frame number, record, CR, ETX, checksum, CR, LF.
+func formatASTMFrame(frameNumber int, record string) string {
+	msgForChecksum := fmt.Sprintf("%d", frameNumber) + record + cr + etx
+	checkSum := calculateASTMChecksum(msgForChecksum)
+
+	return stx + msgForChecksum + checkSum + cr + lf
 }
 
 // calculateASTMChecksum calculates the checksum for ASTM protocol

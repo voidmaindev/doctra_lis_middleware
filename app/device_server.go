@@ -173,7 +173,7 @@ func (a *DeviceServerApplication) processDeviceMessage(deviceMsg []byte, conn *t
 		return err
 	}
 
-	deviceQueryService := services.NewDeviceQueryService(a.Config.DBSettings.QueryHost, device.Serial)
+	deviceQueryService := services.NewDeviceQueryService(log, a.Config.DBSettings.QueryHost, device.Serial)
 
 	deviceDriver, err := driver.NewDriver(device.DeviceModel.Driver, log, store, deviceQueryService)
 	if err != nil {
