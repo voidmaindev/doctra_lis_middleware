@@ -33,7 +33,7 @@ analyzer  --TCP-->  tcp.TCP  --RcvData-->  app.manageMessage  -->  driver.Driver
 ## Drivers
 
 `driver/driver.go` defines the `Driver` interface and the registry of names
-(`hl7_231`, `astm`, `astm_E1394-97`, `astm_wondfo_accre_8`, `text_*`). Each driver lives in its own
+(`hl7_231`, `astm`, `astm_E1394-97`, `astm_wondfo_accre_8`, `text_*` including `text_dri_chem_nx600`). Each driver lives in its own
 package with `<name>.go` (protocol handling) and `<name>_unmarshal.go` (parsing). Driver names are
 normalized (lowercase, punctuation removed) before lookup.
 
