@@ -33,9 +33,12 @@ analyzer  --TCP-->  tcp.TCP  --RcvData-->  app.manageMessage  -->  driver.Driver
 ## Drivers
 
 `driver/driver.go` defines the `Driver` interface and the registry of names
-(`hl7_231`, `astm`, `astm_E1394-97`, `text_*`). Each driver lives in its own package with
-`<name>.go` (protocol handling) and `<name>_unmarshal.go` (parsing). Driver names are normalized
-(lowercase, punctuation removed) before lookup.
+(`hl7_231`, `astm`, `astm_E1394-97`, `astm_wondfo_accre_8`, `text_*`). Each driver lives in its own
+package with `<name>.go` (protocol handling) and `<name>_unmarshal.go` (parsing). Driver names are
+normalized (lowercase, punctuation removed) before lookup.
+
+Device-specific drivers exist where an analyzer deviates from the generic protocol; the JC lab
+analyzers are described in [devices-jc.md](devices-jc.md).
 
 ## Query service
 
