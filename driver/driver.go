@@ -11,6 +11,7 @@ import (
 	"github.com/voidmaindev/doctra_lis_middleware/driver/driver_astm_wondfo_accre_8"
 	"github.com/voidmaindev/doctra_lis_middleware/driver/driver_hl7_231"
 	"github.com/voidmaindev/doctra_lis_middleware/driver/driver_text_combilyzer_13_Human"
+	"github.com/voidmaindev/doctra_lis_middleware/driver/driver_text_dri_chem_nx600"
 	"github.com/voidmaindev/doctra_lis_middleware/driver/driver_text_huma_reader_hs"
 	"github.com/voidmaindev/doctra_lis_middleware/driver/driver_text_humalyzer_primus_human"
 	"github.com/voidmaindev/doctra_lis_middleware/log"
@@ -52,6 +53,8 @@ func NewDriver(driverName string, logger *log.Logger, store *store.Store, device
 		return driver_text_humalyzer_primus_human.NewDriver(logger, store, deviceQueryService), nil
 	case "texthumareaderhs":
 		return driver_text_huma_reader_hs.NewDriver(logger, store, deviceQueryService), nil
+	case "textdrichemnx600":
+		return driver_text_dri_chem_nx600.NewDriver(logger, store, deviceQueryService), nil
 	}
 
 	return nil, fmt.Errorf("unknown driver: %s", driverName)
@@ -80,6 +83,7 @@ func Drivers() []string {
 		"text_combilyzer_13_human",
 		"text_humalyzer_primus_human",
 		"text_huma_reader_hs",
+		"text_dri_chem_nx600",
 	}
 }
 

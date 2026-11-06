@@ -27,6 +27,8 @@ func TestGetRawDatas(t *testing.T) {
 	const (
 		enq = "\x05"
 		eot = "\x04"
+		stx = "\x02"
+		etx = "\x03"
 	)
 
 	tests := []struct {
@@ -46,6 +48,18 @@ func TestGetRawDatas(t *testing.T) {
 			driverName: "astm_wondfo_accre_8",
 			reads:      []string{enq + "fir", "st" + eot},
 			want:       []string{"first"},
+		},
+		{
+			name:       "NX600 record is cut at ETX and the BCC byte is dropped",
+			driverName: "text_dri_chem_nx600",
+			reads:      []string{stx + "R,first" + etx + "l", stx + "R,second" + etx + "("},
+			want:       []string{"R,first", "R,second"},
+		},
+		{
+			name:       "NX600 BCC byte equal to STX leaves a leading STX on the next record",
+			driverName: "text_dri_chem_nx600",
+			reads:      []string{stx + "R,first" + etx + stx, stx + "R,second" + etx + "("},
+			want:       []string{"R,first", stx + "R,second"},
 		},
 	}
 

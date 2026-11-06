@@ -7,6 +7,7 @@ device model. Captures of real sessions were used to build and test the drivers.
 |---|---|---|
 | HumaCount 5D (Dymind DF5x) | `hl7_231` | HL7 2.3.1 `ORU^R01` over MLLP |
 | Wondfo Accre 8 | `astm_wondfo_accre_8` | ASTM-like upload, control characters sent as text |
+| Fujifilm DRI-CHEM NX600 | `text_dri_chem_nx600` | Fujifilm native Type 1/2, `STX`…`ETX` + BCC comma records |
 
 Every analyzer must also exist as a device whose `net_address` is the analyzer's IP; otherwise
 the device server logs `failed to get a device by network address` and drops the message.
@@ -59,3 +60,53 @@ without a preceding order, fails the message (`raw_data.processed = false`).
 - LIS protocol: ASTM, network (TCP) mode, host IP and port of the device server.
 - The operator must enter (or scan) the LIS barcode as the **sample ID**; that value becomes
   `barcode`.
+
+## Fujifilm DRI-CHEM NX600 — `text_dri_chem_nx600`
+
+Package `driver/driver_text_dri_chem_nx600`. Reference: Fujifilm "NX600 Series Communication
+Interface" manual (027-004-01E), native protocol Type 1 (two-way) and Type 2 (one-way). The HL7
+option (Type 4/C) is not used.
+
+### Wire format
+
+The analyzer is the TCP client. It opens a connection, sends one record and closes it:
+
+```
+<STX>R,NORMAL ,03-11-2026,17:16,8            ,RUSO AL RE   ,             ,00,9,999,01,01,
+GLU-PS  ,=,5.3      mmol/l,01,3.9  ,6.1  ,           <ETX><BCC>
+```
+
+- Fields are comma separated and space padded to a fixed width.
+- Header (12 fields): command, condition (`NORMAL` / `CONTROL`), date, time, sample No., patient ID,
+  patient name, species, sex, age, sample position, number of tests.
+- Each test adds 7 fields: name, sign (`=`, `<`, `>`), result (9 chars) + unit (6 chars) in one
+  field, dilution, lower limit, upper limit, warning characters.
+- `BCC` is one byte, the XOR of everything after `STX` through `ETX`. The framing cuts the record
+  at `ETX`, so the BCC never reaches the driver and is **not verified**. Because the BCC can be
+  any byte, including `STX`, the driver drops everything up to the last `STX` of a record.
+- The protocol defines no reply to a result record, so the driver sends nothing back.
+
+Only `R` records with condition `NORMAL` produce lab data. `S` (test start, sent in Type 1),
+`E` (error info), `I` / `W` (worklist requests, Type 1) and `CONTROL` (QC) records are stored as
+raw data and otherwise ignored. Worklist requests are not answered; the analyzer gives up after
+its 5 second timeout.
+
+### Field mapping
+
+| `lab_data` | Source |
+|---|---|
+| `barcode` | Patient ID field (shown as **Sample ID** on the analyzer screen); the sample No. (screen **No.**) when it is blank |
+| `param` | test name as sent, including the sample type suffix (`GLU-PS`) |
+| `result` | first 9 characters of the result field, prefixed with the sign when it is `<` or `>` (`>1500`) |
+| `unit` | remaining 6 characters of the result field |
+| `completed_date` | date + time; `DD-MM-YYYY` (as captured) or `YYYY-MM-DD` (as in the manual), minute precision |
+| `index` | position of the test in the record, starting at 1 |
+
+A record with fewer tests than its "number of tests", an unknown date format, or neither a sample
+ID nor a sample No. fails the message (`raw_data.processed = false`).
+
+### Analyzer-side setup
+
+- Host connection: LAN, communication Type 2 (one-way) or Type 1, PC IP and port of the device server.
+- Date format `DD-MM-YYYY` or `YYYY-MM-DD`; other formats are rejected.
+- The operator must enter (or scan) the LIS barcode as the **Sample ID**; that value becomes `barcode`.
